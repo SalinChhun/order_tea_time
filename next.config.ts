@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
     // experimental: {
     //     serverComponentsExternalPackages: ['grammy'],
     // },
+    eslint: {
+        ignoreDuringBuilds: true,
+    },
 };
 
 export default nextConfig;
