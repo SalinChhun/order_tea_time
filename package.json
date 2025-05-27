@@ -1,13 +1,16 @@
 {
-  "name": "--api",
+  "name": "orderteatime",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "npx prisma db push && npx prisma generate && next build",
-    "postinstall": "prisma generate",
+    "dev": "next dev",
+    "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:reset": "prisma migrate reset",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
     "@prisma/client": "^6.8.2",
