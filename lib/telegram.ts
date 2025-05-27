@@ -1,29 +1,5 @@
-export interface TelegramUser {
-    id: number;
-    is_bot: boolean;
-    first_name: string;
-    last_name?: string;
-    username?: string;
-    language_code?: string;
-}
 
-export interface TelegramMessage {
-    message_id: number;
-    from: TelegramUser;
-    chat: {
-        id: number;
-        type: string;
-    };
-    date: number;
-    text?: string;
-}
-
-export interface TelegramUpdate {
-    update_id: number;
-    message?: TelegramMessage;
-}
-
-// Send message via Telegram Bot API
+//TODO: Send message via Telegram Bot API
 export async function sendTelegramMessage(chatId: number, text: string) {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
 
@@ -49,7 +25,7 @@ export async function sendTelegramMessage(chatId: number, text: string) {
     return response.json();
 }
 
-// Set webhook for your bot
+//TODO: Set webhook for your bot
 export async function setTelegramWebhook(webhookUrl: string) {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
 

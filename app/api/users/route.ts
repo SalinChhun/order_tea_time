@@ -4,11 +4,11 @@ import {prisma} from "@/lib/prisma";
 export async function POST(request: Request) {
 
     try {
-        const {email, name} = await request.json()
+        const {username, name} = await request.json()
 
         const user = await prisma.user.create({
             data: {
-                email,
+                username,
                 name,
             },
         })
@@ -42,12 +42,12 @@ export async function GET(request: Request) {
 
 export async function PUT(request: Request) {
     try {
-        const {id, email, name} = await request.json()
+        const {id, username, name} = await request.json()
 
         const user = await prisma.user.update({
             where: {id},
             data: {
-                email,
+                username,
                 name,
             },
         })
