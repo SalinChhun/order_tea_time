@@ -19,4 +19,62 @@ model User {
   name      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  orders    Order[]
+
+  // @@map("users")
+}
+
+model MenuItem {
+  id          Int         @id @default(autoincrement())
+  name        String      @unique
+  category    ItemCategory
+  description String?
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  orders      Order[]
+
+  // @@map("menu_items")
+}
+
+model Order {
+  id           Int        @id @default(autoincrement())
+  userId       Int        @unique // One order per user per session
+  menuItemId   Int
+  orderDate    DateTime   @default(now())
+  sugarLevel   SugarLevel @default(NO_SUGAR)
+  iceLevel     IceLevel   @default(NORMAL_ICE)
+  specialNotes String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  menuItem     MenuItem   @relation(fields: [menuItemId], references: [id])
+
+  // @@map("orders")
+}
+
+enum ItemCategory {
+  COFFEE
+  TEA
+  MILK_TEA
+  SPECIALTY_DRINK
+  SNACK
+  DESSERT
+}
+
+enum SugarLevel {
+  NO_SUGAR     // 0%
+  LOW_SUGAR    // 25%
+  NORMAL_SUGAR // 50%
+  HIGH_SUGAR   // 75%
+  EXTRA_SUGAR  // 100%
+}
+
+enum IceLevel {
+  NO_ICE
+  LESS_ICE
+  NORMAL_ICE
+  EXTRA_ICE
+  HOT
 }
