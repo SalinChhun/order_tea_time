@@ -1,18 +1,12 @@
 import {NextRequest} from 'next/server';
-import {sendTelegramMessage, sendTelegramMessageWithButtons} from '@/lib/telegram';
+import {sendInlineKeyboard, sendTelegramMessage} from '@/lib/telegram';
 import {UserService} from "@/app/service/user-service";
-import {TelegramCallbackQuery, TelegramUpdate} from "@/app/type/telegram";
+import {TelegramUpdate} from "@/app/type/telegram";
 
 export async function POST(request: NextRequest) {
     try {
-        const update: TelegramUpdate & { callback_query?: TelegramCallbackQuery } = await request.json();
+        const update: TelegramUpdate = await request.json();
         console.log('Received Telegram update:', update);
-
-        // Handle callback queries (button clicks)
-        if (update.callback_query) {
-            await handleCallbackQuery(update.callback_query);
-            return Response.json({ok: true});
-        }
 
         //TODO: Check if this is a message update
         if (!update.message || !update.message.from) {
@@ -30,10 +24,20 @@ export async function POST(request: NextRequest) {
             await handleUserRegistration(telegramUser, chatId);
         }
 
-        // Handle callback query (button click)
-        if (messageText === '/menu') {
-            await showMenuWithButtons(chatId);
+        // Handle callback queries (button clicks)
+        if (update.callback_query) {
+            const callbackQuery = update.callback_query;
+            const chatId = callbackQuery.message?.chat.id;
+            const data = callbackQuery.data;
+
+            if (data === 'order_now' && chatId) {
+                await handleOrderButton(chatId);
+            }
+
+            // Answer the callback query to remove loading state
+            await answerCallbackQuery(callbackQuery.id);
         }
+
 
         return Response.json({ok: true});
     } catch (error) {
@@ -42,32 +46,41 @@ export async function POST(request: NextRequest) {
     }
 }
 
-async function showMenuWithButtons(chatId: number) {
-    const message = "Welcome! Choose an option:";
-    const buttons = [
-        [
-            { text: "Click Me 👆", callback_data: "button_clicked" },
-            { text: "Profile 👤", callback_data: "show_profile" }
-        ],
-        [
-            { text: "Settings ⚙️", callback_data: "show_settings" },
-            { text: "Help ❓", callback_data: "show_help" }
+async function handleOrderButton(chatId: number) {
+    const webAppUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/order`;
+
+    const keyboard = {
+        inline_keyboard: [
+            [
+                {
+                    text: "🛒 Open Teatime Menu",
+                    web_app: { url: webAppUrl }
+                }
+            ]
         ]
-    ];
+    };
 
-    await sendTelegramMessageWithButtons(chatId, message, buttons);
+    await sendInlineKeyboard(
+        chatId,
+        "🍵 Click the button below to open our menu and place your order!",
+        keyboard
+    );
 }
 
-async function handleCallbackQuery(callbackQuery: any) {
-    const chatId = callbackQuery.message.chat.id;
-    const userId = callbackQuery.from.id;
-    const data = callbackQuery.callback_data;
-    const messageId = callbackQuery.message.message_id;
-    console.log(`Received callback query: ${data} from user ${userId}`);
-    console.log(`Chat ID: ${chatId}, Message ID: ${messageId}`);
-    console.log(`Button clicked: ${data} by user ${userId}`);
+async function answerCallbackQuery(callbackQueryId: string) {
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
 
+    await fetch(`https://api.telegram.org/bot${botToken}/answerCallbackQuery`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            callback_query_id: callbackQueryId,
+        }),
+    });
 }
+
 
 async function handleUserRegistration(telegramUser: any, chatId: number) {
     try {

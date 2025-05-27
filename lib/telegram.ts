@@ -25,15 +25,14 @@ export async function sendTelegramMessage(chatId: number, text: string) {
     return response.json();
 }
 
-export async function sendTelegramMessageWithButtons(
-    chatId: number,
-    text: string,
-    buttons: Array<Array<{text: string, callback_data: string}>>
-) {
+export async function sendInlineKeyboard(chatId: number, text: string, keyboard: any) {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
-    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
 
-    const response = await fetch(url, {
+    if (!botToken) {
+        throw new Error('TELEGRAM_BOT_TOKEN is not set');
+    }
+
+    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -41,12 +40,13 @@ export async function sendTelegramMessageWithButtons(
         body: JSON.stringify({
             chat_id: chatId,
             text: text,
-            parse_mode: 'HTML',
-            reply_markup: {
-                inline_keyboard: buttons
-            }
+            reply_markup: keyboard,
         }),
     });
+
+    if (!response.ok) {
+        throw new Error(`Telegram API error: ${response.statusText}`);
+    }
 
     return response.json();
 }
