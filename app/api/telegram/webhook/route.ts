@@ -6,6 +6,7 @@ import {TelegramUpdate} from "@/app/type/telegram";
 export async function POST(request: NextRequest) {
     try {
         const update: TelegramUpdate = await request.json();
+        console.log('Received Telegram update:', update);
 
         //TODO: Check if this is a message update
         if (!update.message || !update.message.from) {
