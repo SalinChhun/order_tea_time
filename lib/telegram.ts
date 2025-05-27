@@ -25,6 +25,32 @@ export async function sendTelegramMessage(chatId: number, text: string) {
     return response.json();
 }
 
+export async function sendTelegramMessageWithButtons(
+    chatId: number,
+    text: string,
+    buttons: Array<Array<{text: string, callback_data: string}>>
+) {
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            chat_id: chatId,
+            text: text,
+            parse_mode: 'HTML',
+            reply_markup: {
+                inline_keyboard: buttons
+            }
+        }),
+    });
+
+    return response.json();
+}
+
 //TODO: Set webhook for your bot
 export async function setTelegramWebhook(webhookUrl: string) {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
