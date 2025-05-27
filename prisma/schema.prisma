@@ -10,7 +10,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // url      = env("DATABASE_URL")
+  url      = "postgresql://order_teatime_db_owner:npg_MQTEa0vxdn3F@ep-aged-band-a8zl9wrd-pooler.eastus2.azure.neon.tech/order_teatime_db?sslmode=require"
 }
 
 model User {
