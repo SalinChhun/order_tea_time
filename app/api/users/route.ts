@@ -1,4 +1,6 @@
 import {prisma} from "@/lib/prisma";
+import {NextRequest} from "next/server";
+import {UserService} from "@/app/service/user-service";
 
 
 export async function POST(request: Request) {
@@ -25,18 +27,25 @@ export async function POST(request: Request) {
 
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
     try {
-        const users = await prisma.user.findMany()
+        const users = await UserService.getAllUsers();
 
-        return new Response(JSON.stringify(users), {
-            status: 200,
-            headers: {'Content-Type': 'application/json'}
-        });
+        return Response.json(users, { status: 200 });
     } catch (error) {
+        console.error("GET /api/users error:", error);
+
         if (error instanceof Error) {
-            return Response.json({error: error.message}, {status: 500})
+            return Response.json(
+                { error: error.message },
+                { status: 500 }
+            );
         }
+
+        return Response.json(
+            { error: "Internal server error" },
+            { status: 500 }
+        );
     }
 }
 

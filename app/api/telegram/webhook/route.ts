@@ -22,7 +22,6 @@ export async function POST(request: NextRequest) {
             console.log(`New user registration: ${telegramUser.first_name} (${telegramUser.id})`);
             console.log(`Chat ID: ${chatId}`);
             await handleUserRegistration(telegramUser, chatId);
-            await setMenuButton(chatId);
         }
 
         return Response.json({ok: true});
@@ -37,6 +36,7 @@ async function handleUserRegistration(telegramUser: any, chatId: number) {
         const result = await UserService.registerUser(telegramUser, chatId);
         if (result.success) {
             await sendTelegramMessage(chatId, result.message);
+            await setMenuButton(chatId);
         }
     } catch (error) {
         console.error('User registration handler error:', error);

@@ -2,26 +2,14 @@
 
 import {useEffect, useState} from 'react';
 import {useSearchParams} from 'next/navigation';
+import {User} from "@prisma/client";
 
-interface TelegramUser {
-    id: string;
-    firstName: string;
-    lastName?: string;
-    username?: string;
-    chatId: string;
-}
-
-interface SessionData {
-    success: boolean;
-    user: TelegramUser;
-    sessionId: string;
-}
 
 export default function HomePageContent() {
     const searchParams = useSearchParams();
     const sessionId = searchParams.get('session');
 
-    const [user, setUser] = useState<TelegramUser | null>(null);
+    const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -30,16 +18,17 @@ export default function HomePageContent() {
             console.log(`Fetching session data for session ID: ${sessionId}`);
             // Simulate fetching session data (replace with actual API call)
             // Example:
-            // fetch(`/api/session?sessionId=${sessionId}`)
-            //   .then(res => res.json())
-            //   .then(data => {
-            //     setUser(data.user);
-            //     setLoading(false);
-            //   })
-            //   .catch(() => {
-            //     setError('Failed to fetch session data.');
-            //     setLoading(false);
-            //   });
+            fetch(`/api/users/${sessionId}`)
+              .then(res => res.json())
+              .then(data => {
+                setUser(data);
+                  console.log(`Fetched user data:`, data);
+                setLoading(false);
+              })
+              .catch(() => {
+                setError('Failed to fetch session data.');
+                setLoading(false);
+              });
             setLoading(false); // Remove this when adding actual fetch logic
         } else {
             setLoading(false);
@@ -86,13 +75,40 @@ export default function HomePageContent() {
                             <div className="flex items-center space-x-2">
                                 <span className="text-sm text-gray-600">Welcome,</span>
                                 <span className="text-sm font-medium text-gray-900">
-                  {user.firstName} {user.lastName}
-                </span>
+                                    {user.name || user.username}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                    (@{user.username})
+                                </span>
                             </div>
                         )}
                     </div>
                 </div>
             </header>
+
+            {/* User info section */}
+            {user && (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="text-lg font-medium text-blue-900">
+                                    Hello, {user.name || user.username}! 👋
+                                </h3>
+                                <p className="text-sm text-blue-700">
+                                    Username: @{user.username} •
+                                    Member since: {new Date(user.createdAt).toLocaleDateString()}
+                                </p>
+                                {/*{user.orders && user.orders.length > 0 && (*/}
+                                {/*    <p className="text-sm text-blue-600 mt-1">*/}
+                                {/*        You have {user.orders.length} previous order(s)*/}
+                                {/*    </p>*/}
+                                {/*)}*/}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Main content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -119,13 +135,31 @@ export default function HomePageContent() {
                             description="Taiwan-style milk tea with tapioca pearls"
                             image="🧋"
                         />
+                        <MenuItemCard
+                            name="Jasmine Tea"
+                            price="$3.75"
+                            description="Fragrant jasmine flowers with green tea"
+                            image="🌸"
+                        />
+                        <MenuItemCard
+                            name="Iced Coffee"
+                            price="$4.25"
+                            description="Cold brew coffee with ice"
+                            image="🧊"
+                        />
+                        <MenuItemCard
+                            name="Matcha Latte"
+                            price="$5.00"
+                            description="Creamy matcha with steamed milk"
+                            image="🍃"
+                        />
                     </div>
 
                     {/* Order button */}
                     <div className="mt-8 text-center">
                         <button
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition duration-200">
-                            Complete Order
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition duration-200 shadow-lg hover:shadow-xl">
+                            Complete Order {user && `for ${user.name || user.username}`}
                         </button>
                     </div>
                 </div>
