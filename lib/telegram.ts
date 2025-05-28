@@ -28,12 +28,14 @@ export async function sendTelegramMessage(chatId: number, text: string) {
 //TODO: Set Menu Button for your bot
 export async function setMenuButton(chatId: number) {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
-    console.log(`Setting menu button for chat ID: ${chatId}`);
+
     if (!botToken) {
         throw new Error('TELEGRAM_BOT_TOKEN is not set');
     }
 
     const webAppUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/home?session=${chatId}`;
+    console.log(`Setting menu button for chat ID: ${chatId}`);
+    console.log(`Web App URL: ${webAppUrl}`);
 
     const response = await fetch(`https://api.telegram.org/bot${botToken}/setChatMenuButton`, {
         method: 'POST',
