@@ -96,6 +96,7 @@ async function handleUserRegistration(telegramUser: any, chatId: number) {
         const result = await UserService.registerUser(telegramUser, chatId);
         if (result.success) {
             await sendTelegramMessage(chatId, result.message);
+            await setMenuButton(chatId);
         }
     } catch (error) {
         console.error('User registration handler error:', error);
@@ -104,4 +105,37 @@ async function handleUserRegistration(telegramUser: any, chatId: number) {
             '❌ Sorry, there was an unexpected error. Please try again later.'
         );
     }
+}
+
+async function setMenuButton(chatId: number) {
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+
+    if (!botToken) {
+        throw new Error('TELEGRAM_BOT_TOKEN is not set');
+    }
+
+    const webAppUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/home?session=${chatId}`;
+
+    const response = await fetch(`https://api.telegram.org/bot${botToken}/setChatMenuButton`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            chat_id: chatId,
+            menu_button: {
+                type: 'web_app',
+                text: 'កម្មង់ | Order',
+                web_app: {
+                    url: webAppUrl,
+                },
+            },
+        }),
+    });
+
+    if (!response.ok) {
+        console.error('Failed to set menu button:', await response.text());
+    }
+
+    return response.json();
 }
