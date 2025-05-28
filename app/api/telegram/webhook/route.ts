@@ -24,11 +24,12 @@ export async function POST(request: NextRequest) {
             await handleUserRegistration(telegramUser, chatId);
         }
 
-        // Handle callback queries (button clicks)
+        //TODO: Handle callback queries (button clicks)
         if (update.callback_query) {
             const callbackQuery = update.callback_query;
             const chatId = callbackQuery.message?.chat.id;
             const data = callbackQuery.data;
+            const telegramUser = callbackQuery.from;
 
             if (data === 'order_now' && chatId) {
                 await handleOrderButton(chatId);
@@ -46,25 +47,33 @@ export async function POST(request: NextRequest) {
     }
 }
 
+// Updated handleOrderButton to pass user information
 async function handleOrderButton(chatId: number) {
-    const webAppUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/order`;
+    try {
 
-    const keyboard = {
-        inline_keyboard: [
-            [
-                {
-                    text: "🛒 Open Teatime Menu",
-                    web_app: { url: webAppUrl }
-                }
+        // Create web app URL with session ID
+        const webAppUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/home?session=${chatId}`;
+
+        const keyboard = {
+            inline_keyboard: [
+                [
+                    {
+                        text: "កម្មង់ | Order",
+                        web_app: { url: webAppUrl }
+                    }
+                ]
             ]
-        ]
-    };
+        };
 
-    await sendInlineKeyboard(
-        chatId,
-        "🍵 Click the button below to open our menu and place your order!",
-        keyboard
-    );
+        await sendInlineKeyboard(
+            chatId,
+            "🍵 Click the button below to place your order!",
+            keyboard
+        );
+    } catch (error) {
+        console.error('Handle order button error:', error);
+        await sendTelegramMessage(chatId, "❌ Sorry, there was an error. Please try again.");
+    }
 }
 
 async function answerCallbackQuery(callbackQueryId: string) {
