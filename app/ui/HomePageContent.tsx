@@ -1,8 +1,7 @@
-// app/home/HomePageContent.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import {useEffect, useState} from 'react';
+import {useSearchParams} from 'next/navigation';
 
 interface TelegramUser {
     id: string;
@@ -124,7 +123,8 @@ export default function HomePageContent() {
 
                     {/* Order button */}
                     <div className="mt-8 text-center">
-                        <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition duration-200">
+                        <button
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition duration-200">
                             Complete Order
                         </button>
                     </div>
@@ -134,7 +134,12 @@ export default function HomePageContent() {
     );
 }
 
-function MenuItemCard({ name, price, description, image }: { name: string; price: string; description: string; image: string }) {
+function MenuItemCard({name, price, description, image}: {
+    name: string;
+    price: string;
+    description: string;
+    image: string
+}) {
     return (
         <div className="border rounded-lg p-4 hover:shadow-md transition duration-200">
             <div className="text-4xl mb-3">{image}</div>
@@ -142,7 +147,8 @@ function MenuItemCard({ name, price, description, image }: { name: string; price
             <p className="text-gray-600 text-sm mb-3">{description}</p>
             <div className="flex items-center justify-between">
                 <span className="font-bold text-blue-600">{price}</span>
-                <button className="bg-blue-100 hover:bg-blue-200 text-blue-600 px-3 py-1 rounded text-sm transition duration-200">
+                <button
+                    className="bg-blue-100 hover:bg-blue-200 text-blue-600 px-3 py-1 rounded text-sm transition duration-200">
                     Add to Cart
                 </button>
             </div>

@@ -25,27 +25,35 @@ export async function sendTelegramMessage(chatId: number, text: string) {
     return response.json();
 }
 
-export async function sendInlineKeyboard(chatId: number, text: string, keyboard: any) {
+//TODO: Set Menu Button for your bot
+export async function setMenuButton(chatId: number) {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
-
+    console.log(`Setting menu button for chat ID: ${chatId}`);
     if (!botToken) {
         throw new Error('TELEGRAM_BOT_TOKEN is not set');
     }
 
-    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+    const webAppUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/home?session=${chatId}`;
+
+    const response = await fetch(`https://api.telegram.org/bot${botToken}/setChatMenuButton`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
             chat_id: chatId,
-            text: text,
-            reply_markup: keyboard,
+            menu_button: {
+                type: 'web_app',
+                text: 'កម្មង់ | Order',
+                web_app: {
+                    url: webAppUrl,
+                },
+            },
         }),
     });
 
     if (!response.ok) {
-        throw new Error(`Telegram API error: ${response.statusText}`);
+        console.error('Failed to set menu button:', await response.text());
     }
 
     return response.json();
