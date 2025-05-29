@@ -15,7 +15,8 @@ datasource db {
 
 model User {
   id        Int   @id @default(autoincrement())
-  username     String   @unique
+  username  String   @unique
+  image     String?
   name      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -27,6 +28,7 @@ model User {
 model MenuItem {
   id          Int         @id @default(autoincrement())
   name        String      @unique
+  image       String?
   category    ItemCategory
   description String?
   isActive    Boolean     @default(true)
@@ -39,11 +41,12 @@ model MenuItem {
 
 model Order {
   id           Int        @id @default(autoincrement())
-  userId       Int        @unique // One order per user per session
+  userId       Int
+  userDisplay  String?
   menuItemId   Int
   orderDate    DateTime   @default(now())
-  sugarLevel   SugarLevel @default(NO_SUGAR)
-  iceLevel     IceLevel   @default(NORMAL_ICE)
+  sugarLevel   SugarLevel?
+  iceLevel     IceLevel?
   specialNotes String?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt

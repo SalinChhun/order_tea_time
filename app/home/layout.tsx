@@ -3,6 +3,7 @@ import {PropsWithChildren, useEffect} from "react";
 import "@/globals.css";
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
 import toast, {Toaster, useToasterStore} from "react-hot-toast";
+import Navbar from "@/app/components/Navbar";
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -22,7 +23,7 @@ export default function HomeLayout({children}: PropsWithChildren) {
             .forEach((t) => toast.dismiss(t.id)); // Dismiss – Use toast.remove(t.id) removal without animation
     }, [toasts]);
     return (
-        <>
+        <div className="min-h-screen bg-gray-50">
             <Toaster
                 position="top-right"
                 reverseOrder={false}
@@ -36,10 +37,11 @@ export default function HomeLayout({children}: PropsWithChildren) {
                 }}/>
             <QueryClientProvider client={queryClient}>
                 <div className="home-container">
+                    <Navbar/>
                     {children}
                 </div>
             </QueryClientProvider>
-        </>
+        </div>
     );
 
 };

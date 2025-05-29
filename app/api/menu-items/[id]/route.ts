@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { deleteMenuItem, getMenuItemById, updateMenuItem } from '@/app/service/menuItem-service';
+import { Prisma } from '@prisma/client';
 
 export async function GET(request: Request) {
     const id = parseInt(request.url.split('/').pop() || '');
@@ -21,10 +22,25 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
     const id = parseInt(request.url.split('/').pop() || '');
+
+    if (isNaN(id)) {
+        return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
+    }
+
     try {
         const deleted = await deleteMenuItem(id);
         return NextResponse.json({ message: 'Deleted', item: deleted });
-    } catch {
+    } catch (error) {
+        if (
+            error instanceof Prisma.PrismaClientKnownRequestError &&
+            error.code === 'P2003'
+        ) {
+            return NextResponse.json(
+                { error: 'This product is already in use and cannot be deleted' },
+                { status: 400 }
+            );
+        }
+
         return NextResponse.json({ error: 'Delete failed' }, { status: 500 });
     }
 }

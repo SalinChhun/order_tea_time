@@ -14,11 +14,13 @@ export const getMenuItemById = async (id: number) => {
 
 export const createMenuItem = async ({
                                          name,
+                                         image,
                                          category,
                                          description,
                                          isActive = true,
                                      }: {
     name: string;
+    image?: string
     category: ItemCategory;
     description?: string;
     isActive?: boolean;
@@ -26,6 +28,7 @@ export const createMenuItem = async ({
     return prisma.menuItem.create({
         data: {
             name,
+            image,
             category,
             description,
             isActive,
@@ -37,6 +40,7 @@ export const updateMenuItem = async (
     id: number,
     updates: {
         name?: string;
+        image?: string
         category?: ItemCategory;
         description?: string;
         isActive?: boolean;

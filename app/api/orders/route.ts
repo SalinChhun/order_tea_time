@@ -5,7 +5,7 @@ import {createOrder, deleteAllOrders, getAllOrders} from "@/app/service/order-se
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const {userId, menuItemId, sugarLevel, iceLevel, specialNotes} = body;
+        const {userId, userDisplay, menuItemId, sugarLevel, iceLevel, specialNotes} = body;
 
         if (!userId || !menuItemId) {
             return NextResponse.json({error: 'userId and menuItemId are required'}, {status: 400});
@@ -14,6 +14,7 @@ export async function POST(request: Request) {
         const newOrder = await createOrder({
             userId: parseInt(userId),
             menuItemId: parseInt(menuItemId),
+            userDisplay: userDisplay,
             sugarLevel,
             iceLevel,
             specialNotes,

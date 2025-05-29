@@ -5,21 +5,24 @@ import IceLevel = $Enums.IceLevel;
 
 export const createOrder = async ({
                                       userId,
+                                      userDisplay,
                                       menuItemId,
                                       sugarLevel = 'NO_SUGAR',
                                       iceLevel = 'NORMAL_ICE',
                                       specialNotes,
                                   }: {
     userId: number;
+    userDisplay: string;
     menuItemId: number;
     sugarLevel?: SugarLevel;
     iceLevel?: IceLevel;
     specialNotes?: string;
 }) => {
-    return await prisma.order.create({
+    return prisma.order.create({
         data: {
             userId,
             menuItemId,
+            userDisplay,
             sugarLevel,
             iceLevel,
             specialNotes,
