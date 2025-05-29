@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
-import {deleteOrderById} from "@/app/service/order-service";
+import { deleteOrderById } from '@/app/service/order-service';
 
+export async function DELETE(request: Request) {
+    const url = new URL(request.url);
+    const idString = url.pathname.split('/').pop();
+    const id = parseInt(idString || '');
 
-export async function DELETE(
-    request: Request,
-    { params }: { params: { id: string } }
-) {
-    const id = parseInt(params.id);
     if (isNaN(id)) {
         return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
     }
