@@ -1,16 +1,22 @@
 import { NextResponse } from 'next/server';
-import {deleteMenuItem, getMenuItemById, updateMenuItem} from "@/app/service/menuItem-service";
+import { deleteMenuItem, getMenuItemById, updateMenuItem } from '@/app/service/menuItem-service';
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
-    const id = parseInt(params.id);
+export async function GET(
+    request: Request,
+    context: { params: { id: string } }
+) {
+    const id = parseInt(context.params.id);
     const item = await getMenuItemById(id);
     if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json(item);
 }
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
-    const id = parseInt(params.id);
-    const updates = await req.json();
+export async function PUT(
+    request: Request,
+    context: { params: { id: string } }
+) {
+    const id = parseInt(context.params.id);
+    const updates = await request.json();
     try {
         const updated = await updateMenuItem(id, updates);
         return NextResponse.json(updated);
@@ -19,8 +25,11 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     }
 }
 
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
-    const id = parseInt(params.id);
+export async function DELETE(
+    request: Request,
+    context: { params: { id: string } }
+) {
+    const id = parseInt(context.params.id);
     try {
         const deleted = await deleteMenuItem(id);
         return NextResponse.json({ message: 'Deleted', item: deleted });
