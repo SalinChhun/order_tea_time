@@ -9,6 +9,8 @@ import {DialogHeader} from "next/dist/client/components/react-dev-overlay/intern
 import {Avatar, AvatarFallback, AvatarImage} from "@radix-ui/react-avatar";
 import {Label} from "@radix-ui/react-label";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@radix-ui/react-select";
+import CreateOrder from "@/app/ui/CreateOrder";
+// import CreateOrder from "@/app/ui/CreateOrder";
 
 interface TeamOrder {
     id: string
@@ -19,34 +21,19 @@ interface TeamOrder {
     notes: string
 }
 
-const menuItems = [
-    "Americano",
-    "Banana Milk",
-    "Pocari Sweat",
-    "Coca-cola",
-    "Cafe Latte",
-    "Macha Latte",
-    "Chocolate",
-    "Bird Nest",
-    "Potato Chips",
-]
-
-const sugarLevels = ["0%", "25%", "50%", "75%", "100%"]
-const iceOptions = ["Less Ice", "Normal Ice", "Hot", "No Ice"]
-
 export default function HomePageContent() {
 
 
     const [orders, setOrders] = useState<TeamOrder[]>([
-        { id: "1", member: "Bong Channa", item: "Americano", sugar: "0%", ice: "Less Ice", notes: "" },
-        { id: "2", member: "Bong Yuos", item: "Banana Milk", sugar: "", ice: "", notes: "" },
-        { id: "3", member: "Bong Phath", item: "Americano", sugar: "0%", ice: "Normal Ice", notes: "" },
-        { id: "4", member: "Bong Seyha", item: "Pocari Sweat", sugar: "", ice: "", notes: "" },
-        { id: "5", member: "Vuthin", item: "Cafe Latte", sugar: "0%", ice: "Hot", notes: "" },
+        {id: "1", member: "Bong Channa", item: "Americano", sugar: "0%", ice: "Less Ice", notes: ""},
+        {id: "2", member: "Bong Yuos", item: "Banana Milk", sugar: "", ice: "", notes: ""},
+        {id: "3", member: "Bong Phath", item: "Americano", sugar: "0%", ice: "Normal Ice", notes: ""},
+        {id: "4", member: "Bong Seyha", item: "Pocari Sweat", sugar: "", ice: "", notes: ""},
+        {id: "5", member: "Vuthin", item: "Cafe Latte", sugar: "0%", ice: "Hot", notes: ""},
     ])
 
     const [editingOrder, setEditingOrder] = useState<TeamOrder | null>(null)
-    const [isDialogOpen, setIsDialogOpen] = useState(false)
+    const [isOrderOpen, setIsOrderOpen] = useState(false)
     const [showClearDialog, setShowClearDialog] = useState(false)
     const [orderToDelete, setOrderToDelete] = useState<string | null>(null)
     const [showProfileDialog, setShowProfileDialog] = useState(false)
@@ -90,43 +77,8 @@ export default function HomePageContent() {
         }
     }
 
-    const openNewOrderDialog = () => {
-        setEditingOrder({
-            id: Date.now().toString(),
-            member: "",
-            item: "",
-            sugar: "",
-            ice: "",
-            notes: "",
-        })
-        setIsDialogOpen(true)
-    }
-
     const openEditDialog = (order: TeamOrder) => {
-        setEditingOrder({ ...order })
-        setIsDialogOpen(true)
-    }
-
-    const saveOrder = () => {
-        if (!editingOrder) return
-
-        const existingOrderIndex = orders.findIndex((o) => o.id === editingOrder.id)
-        if (existingOrderIndex >= 0) {
-            // Update existing order
-            setOrders(orders.map((o) => (o.id === editingOrder.id ? editingOrder : o)))
-        } else {
-            // Add new order
-            setOrders([...orders, editingOrder])
-        }
-
-        setIsDialogOpen(false)
-        setEditingOrder(null)
-    }
-
-    const updateEditingOrder = (field: keyof TeamOrder, value: string) => {
-        if (editingOrder) {
-            setEditingOrder({ ...editingOrder, [field]: value })
-        }
+        setEditingOrder({...order})
     }
 
     const clearAllOrders = () => {
@@ -140,7 +92,7 @@ export default function HomePageContent() {
     }
 
     const updateProfile = (field: keyof typeof userProfile, value: string) => {
-        setUserProfile({ ...userProfile, [field]: value })
+        setUserProfile({...userProfile, [field]: value})
     }
 
     const getInitials = (name: string) => {
@@ -277,9 +229,25 @@ export default function HomePageContent() {
                             <div className="relative">
                                 <button
                                     onClick={() => setShowProfileDialog(true)}
-                                    className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-white hover:bg-opacity-30 p-0"
+                                    className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-white hover:bg-opacity-30 p-0 transition-colors"
                                 >
-                                    <User className="w-5 h-5 text-white"/>
+                                    <svg className="w-5 h-5 text-white" width="24" height="24" viewBox="0 0 24 24"
+                                         fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                            d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        />
+                                        <path
+                                            d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        />
+                                    </svg>
                                 </button>
                                 <div
                                     className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
@@ -291,7 +259,24 @@ export default function HomePageContent() {
                             <div className="relative">
                                 <div
                                     className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                                    <ShoppingCart className="w-5 h-5 text-white"/>
+                                    <svg
+                                        className="w-5 h-5 text-white"
+                                        fill="currentColor"
+                                        version="1.1"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 902.86 902.86"
+                                    >
+                                        <g>
+                                            <g>
+                                                <path
+                                                    d="M671.504,577.829l110.485-432.609H902.86v-68H729.174L703.128,179.2L0,178.697l74.753,399.129h596.751V577.829z M685.766,247.188l-67.077,262.64H131.199L81.928,246.756L685.766,247.188z"/>
+                                                <path
+                                                    d="M578.418,825.641c59.961,0,108.743-48.783,108.743-108.744s-48.782-108.742-108.743-108.742H168.717 c-59.961,0-108.744,48.781-108.744,108.742s48.782,108.744,108.744,108.744c59.962,0,108.743-48.783,108.743-108.744 c0-14.4-2.821-28.152-7.927-40.742h208.069c-5.107,12.59-7.928,26.342-7.928,40.742 C469.675,776.858,518.457,825.641,578.418,825.641z M209.46,716.897c0,22.467-18.277,40.744-40.743,40.744 c-22.466,0-40.744-18.277-40.744-40.744c0-22.465,18.277-40.742,40.744-40.742C191.183,676.155,209.46,694.432,209.46,716.897z M619.162,716.897c0,22.467-18.277,40.744-40.743,40.744s-40.743-18.277-40.743-40.744c0-22.465,18.277-40.742,40.743-40.742 S619.162,694.432,619.162,716.897z"/>
+                                            </g>
+                                        </g>
+                                    </svg>
                                 </div>
                                 <div
                                     className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
@@ -329,7 +314,24 @@ export default function HomePageContent() {
                                 <div className="relative">
                                     <div
                                         className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                                        <ShoppingCart className="w-6 h-6 text-white"/>
+                                        <svg
+                                            className="w-6 h-6 text-white"
+                                            fill="currentColor"
+                                            version="1.1"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="24"
+                                            height="24"
+                                            viewBox="0 0 902.86 902.86"
+                                        >
+                                            <g>
+                                                <g>
+                                                    <path
+                                                        d="M671.504,577.829l110.485-432.609H902.86v-68H729.174L703.128,179.2L0,178.697l74.753,399.129h596.751V577.829z M685.766,247.188l-67.077,262.64H131.199L81.928,246.756L685.766,247.188z"/>
+                                                    <path
+                                                        d="M578.418,825.641c59.961,0,108.743-48.783,108.743-108.744s-48.782-108.742-108.743-108.742H168.717 c-59.961,0-108.744,48.781-108.744,108.742s48.782,108.744,108.744,108.744c59.962,0,108.743-48.783,108.743-108.744 c0-14.4-2.821-28.152-7.927-40.742h208.069c-5.107,12.59-7.928,26.342-7.928,40.742 C469.675,776.858,518.457,825.641,578.418,825.641z M209.46,716.897c0,22.467-18.277,40.744-40.743,40.744 c-22.466,0-40.744-18.277-40.744-40.744c0-22.465,18.277-40.742,40.744-40.742C191.183,676.155,209.46,694.432,209.46,716.897z M619.162,716.897c0,22.467-18.277,40.744-40.743,40.744s-40.743-18.277-40.743-40.744c0-22.465,18.277-40.742,40.743-40.742 S619.162,694.432,619.162,716.897z"/>
+                                                </g>
+                                            </g>
+                                        </svg>
                                     </div>
                                     <div
                                         className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
@@ -341,9 +343,25 @@ export default function HomePageContent() {
                                 <div className="relative">
                                     <button
                                         onClick={() => setShowProfileDialog(true)}
-                                        className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-white hover:bg-opacity-30 p-0"
+                                        className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-white hover:bg-opacity-30 p-0 transition-colors"
                                     >
-                                        <User className="w-6 h-6 text-white"/>
+                                        <svg className="w-6 h-6 text-white" width="24" height="24" viewBox="0 0 24 24"
+                                             fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            />
+                                            <path
+                                                d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z"
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            />
+                                        </svg>
                                     </button>
                                     <div
                                         className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
@@ -376,13 +394,13 @@ export default function HomePageContent() {
                                     <div className="flex gap-1">
                                         <button
                                             onClick={() => openEditDialog(order)}
-                                            className="text-gray-500 hover:text-teal-600"
+                                            className="p-1 rounded-full text-gray-500 hover:text-teal-600 hover:bg-gray-100"
                                         >
                                             <Edit className="w-4 h-4"/>
                                         </button>
                                         <button
                                             onClick={() => setOrderToDelete(order.id)}
-                                            className="text-gray-500 hover:text-red-600"
+                                            className="p-1 rounded-full text-gray-500 hover:text-red-600 hover:bg-gray-100"
                                         >
                                             <Trash2 className="w-4 h-4"/>
                                         </button>
@@ -415,7 +433,7 @@ export default function HomePageContent() {
                 {orders.length > 0 && (
                     <button
                         onClick={() => setShowClearDialog(true)}
-                        className="rounded-full w-14 h-14 bg-red-500 hover:bg-red-600 shadow-lg"
+                        className="rounded-full w-14 h-14 bg-red-500 hover:bg-red-600 shadow-lg flex items-center justify-center text-white"
                     >
                         <Trash2 className="w-6 h-6"/>
                     </button>
@@ -423,8 +441,8 @@ export default function HomePageContent() {
 
                 {/* Add Button */}
                 <button
-                    onClick={openNewOrderDialog}
-                    className="rounded-full w-16 h-16 bg-teal-600 hover:bg-teal-700 shadow-lg"
+                    onClick={() => setIsOrderOpen(true)}
+                    className="rounded-full w-16 h-16 bg-teal-600 hover:bg-teal-700 shadow-lg flex items-center justify-center text-white"
                 >
                     <Plus className="w-8 h-8"/>
                 </button>
@@ -456,12 +474,32 @@ export default function HomePageContent() {
                 </div>
             </footer>
 
+            {
+                isOrderOpen && <CreateOrder show={isOrderOpen} onClose={() => setIsOrderOpen(false)}/>
+            }
+
             {/* Profile Dialog */}
             <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
                 <DialogContent className="sm:max-w-md mx-4">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                            <User className="w-5 h-5"/>
+                            <svg className="w-5 h-5" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+                                <path
+                                    d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+                            </svg>
                             Profile Settings
                         </DialogTitle>
                     </DialogHeader>
@@ -476,159 +514,55 @@ export default function HomePageContent() {
                         </div>
 
                         <div>
-                            <Label htmlFor="name" className="text-sm font-medium">
+                            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                                 Full Name
-                            </Label>
+                            </label>
                             <input
                                 id="name"
+                                type="text"
                                 placeholder="Enter your full name"
                                 value={userProfile.name}
                                 onChange={(e) => updateProfile("name", e.target.value)}
-                                className="mt-1"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                             />
                         </div>
 
                         <div>
-                            <Label htmlFor="username" className="text-sm font-medium">
+                            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
                                 Username
-                            </Label>
+                            </label>
                             <input
                                 id="username"
+                                type="text"
                                 placeholder="@username"
                                 value={userProfile.username}
                                 onChange={(e) => updateProfile("username", e.target.value)}
-                                className="mt-1"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                             />
                         </div>
 
                         <div>
-                            <Label htmlFor="avatar" className="text-sm font-medium">
+                            <label htmlFor="avatar" className="block text-sm font-medium text-gray-700 mb-1">
                                 Avatar URL (optional)
-                            </Label>
+                            </label>
                             <input
                                 id="avatar"
+                                type="url"
                                 placeholder="https://example.com/avatar.jpg"
                                 value={userProfile.avatar}
                                 onChange={(e) => updateProfile("avatar", e.target.value)}
-                                className="mt-1"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                             />
                         </div>
 
-                        <button onClick={() => setShowProfileDialog(false)}
-                                className="w-full bg-teal-600 hover:bg-teal-700">
+                        <button
+                            onClick={() => setShowProfileDialog(false)}
+                            className="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 px-4 rounded-md flex items-center justify-center"
+                        >
                             <Save className="w-4 h-4 mr-2"/>
                             Save Profile
                         </button>
                     </div>
-                </DialogContent>
-            </Dialog>
-
-            {/* Order Dialog */}
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="sm:max-w-md mx-4 max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <Users className="w-5 h-5"/>
-                            {editingOrder?.member ? "Edit Order" : "New Order"}
-                        </DialogTitle>
-                    </DialogHeader>
-
-                    {editingOrder && (
-                        <div className="space-y-4 py-4">
-                            {/* Member Name */}
-                            <div>
-                                <Label htmlFor="member" className="text-sm font-medium">
-                                    Team Member
-                                </Label>
-                                <input
-                                    id="member"
-                                    placeholder="Enter team member name"
-                                    value={editingOrder.member}
-                                    onChange={(e) => updateEditingOrder("member", e.target.value)}
-                                    className="mt-1"
-                                />
-                            </div>
-
-                            {/* Item Selection */}
-                            <div>
-                                <Label className="text-sm font-medium">Item</Label>
-                                <Select value={editingOrder.item}
-                                        onValueChange={(value) => updateEditingOrder("item", value)}>
-                                    <SelectTrigger className="mt-1">
-                                        <SelectValue placeholder="Select item"/>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {menuItems.map((item) => (
-                                            <SelectItem key={item} value={item}>
-                                                {item}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            {/* Sugar and Ice */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <Label className="text-sm font-medium">Sugar Level</Label>
-                                    <Select value={editingOrder.sugar}
-                                            onValueChange={(value) => updateEditingOrder("sugar", value)}>
-                                        <SelectTrigger className="mt-1">
-                                            <SelectValue placeholder="Sugar"/>
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {sugarLevels.map((level) => (
-                                                <SelectItem key={level} value={level}>
-                                                    {level}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div>
-                                    <Label className="text-sm font-medium">Ice Preference</Label>
-                                    <Select value={editingOrder.ice}
-                                            onValueChange={(value) => updateEditingOrder("ice", value)}>
-                                        <SelectTrigger className="mt-1">
-                                            <SelectValue placeholder="Ice"/>
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {iceOptions.map((option) => (
-                                                <SelectItem key={option} value={option}>
-                                                    {option}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            {/* Notes */}
-                            <div>
-                                <Label htmlFor="notes" className="text-sm font-medium">
-                                    Special Notes
-                                </Label>
-                                <textarea
-                                    id="notes"
-                                    placeholder="Any special instructions..."
-                                    value={editingOrder.notes}
-                                    onChange={(e) => updateEditingOrder("notes", e.target.value)}
-                                    className="mt-1 min-h-[80px] resize-none"
-                                />
-                            </div>
-
-                            {/* Save Button */}
-                            <button
-                                onClick={saveOrder}
-                                className="w-full bg-teal-600 hover:bg-teal-700"
-                                disabled={!editingOrder.member || !editingOrder.item}
-                            >
-                                <Save className="w-4 h-4 mr-2"/>
-                                Save Order
-                            </button>
-                        </div>
-                    )}
                 </DialogContent>
             </Dialog>
 
@@ -646,11 +580,16 @@ export default function HomePageContent() {
                             Are you sure you want to clear all orders? This action cannot be undone.
                         </p>
                         <div className="flex gap-3">
-                            <button onClick={() => setShowClearDialog(false)} className="flex-1">
+                            <button
+                                onClick={() => setShowClearDialog(false)}
+                                className="flex-1 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 py-2 px-4 rounded-md"
+                            >
                                 Cancel
                             </button>
-                            <button  onClick={clearAllOrders}
-                                    className="flex-1 bg-red-500 hover:bg-red-600">
+                            <button
+                                onClick={clearAllOrders}
+                                className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md"
+                            >
                                 Clear All
                             </button>
                         </div>
@@ -672,12 +611,15 @@ export default function HomePageContent() {
                             Are you sure you want to delete this order? This action cannot be undone.
                         </p>
                         <div className="flex gap-3">
-                            <button onClick={() => setOrderToDelete(null)} className="flex-1">
+                            <button
+                                onClick={() => setOrderToDelete(null)}
+                                className="flex-1 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 py-2 px-4 rounded-md"
+                            >
                                 Cancel
                             </button>
                             <button
                                 onClick={() => orderToDelete && deleteOrder(orderToDelete)}
-                                className="flex-1 bg-red-500 hover:bg-red-600"
+                                className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md"
                             >
                                 Delete
                             </button>
