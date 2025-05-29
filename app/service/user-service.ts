@@ -1,5 +1,5 @@
 import {prisma} from '@/lib/prisma';
-import {CreateUserResult, TelegramUserData} from "@/app/type/user";
+import {CreateUserResult, TelegramUserData} from "@/type/user";
 import {User} from "@prisma/client";
 
 export class UserService {

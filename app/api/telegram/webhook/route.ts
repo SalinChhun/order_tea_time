@@ -1,7 +1,7 @@
 import {NextRequest} from 'next/server';
 import {sendTelegramMessage, setMenuButton} from '@/lib/telegram';
 import {UserService} from "@/app/service/user-service";
-import {TelegramUpdate} from "@/app/type/telegram";
+import {TelegramUpdate} from "@/type/telegram";
 
 export async function POST(request: NextRequest) {
     try {

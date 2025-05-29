@@ -2,41 +2,26 @@
 
 import {useEffect, useState} from 'react';
 import {useSearchParams} from 'next/navigation';
-import {User} from "@prisma/client";
-
+import useUserMutation from "@/lib/hooks/useUserMutation";
 
 export default function HomePageContent() {
     const searchParams = useSearchParams();
     const sessionId = searchParams.get('session');
-
-    const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (sessionId) {
-            console.log(`Fetching session data for session ID: ${sessionId}`);
-            // Simulate fetching session data (replace with actual API call)
-            // Example:
-            fetch(`/api/users/${sessionId}`)
-              .then(res => res.json())
-              .then(data => {
-                setUser(data);
-                  console.log(`Fetched user data:`, data);
-                setLoading(false);
-              })
-              .catch(() => {
-                setError('Failed to fetch session data.');
-                setLoading(false);
-              });
-            setLoading(false); // Remove this when adding actual fetch logic
-        } else {
-            setLoading(false);
+        if (!sessionId) {
             setError('No session found. Please start from Telegram bot.');
+        } else {
+            setError(null);
         }
     }, [sessionId]);
 
-    if (loading) {
+    const {user, isLoading} = useUserMutation.useFetchUserByUsername(sessionId);
+    console.log('user -> ', user);
+
+    // Use React Query's loading state instead of local state
+    if (isLoading && sessionId) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
@@ -56,6 +41,24 @@ export default function HomePageContent() {
                     <p className="text-gray-600 mb-4">{error}</p>
                     <p className="text-sm text-gray-500">
                         Please go back to the Telegram bot and click the "កម្មង់ | Order" button again.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    // Show error if session exists but no user found
+    if (sessionId && !isLoading && !user) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center max-w-md mx-auto p-6">
+                    <div className="text-orange-500 text-6xl mb-4">👤</div>
+                    <h2 className="text-xl font-semibold mb-2">User Not Found</h2>
+                    <p className="text-gray-600 mb-4">
+                        Could not find user with session ID: {sessionId}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                        Please try again from the Telegram bot.
                     </p>
                 </div>
             </div>
@@ -99,93 +102,14 @@ export default function HomePageContent() {
                                     Username: @{user.username} •
                                     Member since: {new Date(user.createdAt).toLocaleDateString()}
                                 </p>
-                                {/*{user.orders && user.orders.length > 0 && (*/}
-                                {/*    <p className="text-sm text-blue-600 mt-1">*/}
-                                {/*        You have {user.orders.length} previous order(s)*/}
-                                {/*    </p>*/}
-                                {/*)}*/}
+                                <div className="mt-2 text-xs text-blue-600 bg-blue-100 inline-block px-2 py-1 rounded">
+                                    Session ID: {sessionId}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             )}
-
-            {/* Main content */}
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="bg-white rounded-lg shadow p-6">
-                    <h2 className="text-2xl font-bold mb-6">Our Menu</h2>
-
-                    {/* Sample menu items */}
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <MenuItemCard
-                            name="Green Tea"
-                            price="$3.50"
-                            description="Premium green tea with antioxidants"
-                            image="🍵"
-                        />
-                        <MenuItemCard
-                            name="Earl Grey"
-                            price="$4.00"
-                            description="Classic black tea with bergamot"
-                            image="☕"
-                        />
-                        <MenuItemCard
-                            name="Bubble Tea"
-                            price="$5.50"
-                            description="Taiwan-style milk tea with tapioca pearls"
-                            image="🧋"
-                        />
-                        <MenuItemCard
-                            name="Jasmine Tea"
-                            price="$3.75"
-                            description="Fragrant jasmine flowers with green tea"
-                            image="🌸"
-                        />
-                        <MenuItemCard
-                            name="Iced Coffee"
-                            price="$4.25"
-                            description="Cold brew coffee with ice"
-                            image="🧊"
-                        />
-                        <MenuItemCard
-                            name="Matcha Latte"
-                            price="$5.00"
-                            description="Creamy matcha with steamed milk"
-                            image="🍃"
-                        />
-                    </div>
-
-                    {/* Order button */}
-                    <div className="mt-8 text-center">
-                        <button
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition duration-200 shadow-lg hover:shadow-xl">
-                            Complete Order {user && `for ${user.name || user.username}`}
-                        </button>
-                    </div>
-                </div>
-            </main>
-        </div>
-    );
-}
-
-function MenuItemCard({name, price, description, image}: {
-    name: string;
-    price: string;
-    description: string;
-    image: string
-}) {
-    return (
-        <div className="border rounded-lg p-4 hover:shadow-md transition duration-200">
-            <div className="text-4xl mb-3">{image}</div>
-            <h3 className="font-semibold text-lg mb-2">{name}</h3>
-            <p className="text-gray-600 text-sm mb-3">{description}</p>
-            <div className="flex items-center justify-between">
-                <span className="font-bold text-blue-600">{price}</span>
-                <button
-                    className="bg-blue-100 hover:bg-blue-200 text-blue-600 px-3 py-1 rounded text-sm transition duration-200">
-                    Add to Cart
-                </button>
-            </div>
         </div>
     );
 }
