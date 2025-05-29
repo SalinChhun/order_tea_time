@@ -1,21 +1,15 @@
 import { NextResponse } from 'next/server';
 import { deleteMenuItem, getMenuItemById, updateMenuItem } from '@/app/service/menuItem-service';
 
-export async function GET(
-    request: Request,
-    context: { params: { id: string } }
-) {
-    const id = parseInt(context.params.id);
+export async function GET(request: Request) {
+    const id = parseInt(request.url.split('/').pop() || '');
     const item = await getMenuItemById(id);
     if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json(item);
 }
 
-export async function PUT(
-    request: Request,
-    context: { params: { id: string } }
-) {
-    const id = parseInt(context.params.id);
+export async function PUT(request: Request) {
+    const id = parseInt(request.url.split('/').pop() || '');
     const updates = await request.json();
     try {
         const updated = await updateMenuItem(id, updates);
@@ -25,11 +19,8 @@ export async function PUT(
     }
 }
 
-export async function DELETE(
-    request: Request,
-    context: { params: { id: string } }
-) {
-    const id = parseInt(context.params.id);
+export async function DELETE(request: Request) {
+    const id = parseInt(request.url.split('/').pop() || '');
     try {
         const deleted = await deleteMenuItem(id);
         return NextResponse.json({ message: 'Deleted', item: deleted });
