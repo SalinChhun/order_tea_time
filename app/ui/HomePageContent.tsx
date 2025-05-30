@@ -205,7 +205,12 @@ export default function HomePageContent() {
                                     {isCurrentUserOrder(order) && (
                                         <div className="flex gap-1">
                                             <button
-                                                onClick={() => setEditingOrder(order)}
+                                                onClick={
+                                                    () => {
+                                                        setIsOrderOpen(true)
+                                                        setEditingOrder(order)
+                                                    }
+                                                }
                                                 className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-teal-100 hover:text-teal-600 transition-colors"
                                                 title="Edit your order"
                                             >
@@ -300,10 +305,6 @@ export default function HomePageContent() {
             {/* Bottom Safe Area */}
             <div className="h-20"></div>
 
-            {
-                isOrderOpen &&
-                <CreateOrder sessionId={sessionId} show={isOrderOpen} onClose={() => setIsOrderOpen(false)}/>
-            }
             {
                 (isOrderOpen) && (
                     <CreateOrder
