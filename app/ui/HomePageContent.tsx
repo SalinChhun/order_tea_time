@@ -8,11 +8,16 @@ import {Avatar, AvatarFallback, AvatarImage} from "@radix-ui/react-avatar";
 import CreateOrder from "@/app/ui/CreateOrder";
 import useOrderMutation from "@/lib/hooks/use-order-mutation";
 import {getIceText, getSugarText} from "@/utils/utils";
+import {useMutation, useQueryClient} from "@tanstack/react-query";
+import {orderService} from "@/services/order.service";
+import toast from "react-hot-toast";
+import useUserMutation from "@/lib/hooks/use-user-mutation";
 
 export default function HomePageContent() {
 
-    const [isOrderOpen, setIsOrderOpen] = useState(false)
-
+    const queryClient = useQueryClient();
+    const {orders, isLoading} = useOrderMutation.useFetchOrder();
+    console.log('orders', orders);
     const searchParams = useSearchParams();
     const sessionId = searchParams.get('session');
     const [error, setError] = useState<string | null>(null);
@@ -25,10 +30,82 @@ export default function HomePageContent() {
         }
     }, [sessionId]);
 
-    // const {user, isLoading} = useUserMutation.useFetchUserByUsername(sessionId);
+    const { user, isLoading: isUserLoading } = useUserMutation.useFetchUserByUsername(sessionId);
+    const isCurrentUserOrder = (order: any) => {
+        if (!user || !order) return false;
 
-    const {orders, isLoading} = useOrderMutation.useFetchOrder();
-    console.log('orders', orders);
+        // Check if the order belongs to current user by comparing usernames
+        return order.user?.username === user.username ||
+            order.userId === user.id
+    };
+
+    // State to manage order state
+    const [isOrderOpen, setIsOrderOpen] = useState(false)
+    const [editingOrder, setEditingOrder] = useState<any>(null);
+
+    const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
+    const [clearingAllOrders, setClearingAllOrders] = useState(false);
+
+
+    //TODO: Handle Func
+    const handleDeleteOrder = (orderId: string, orderName: string) => {
+        const isConfirmed = window.confirm(
+            `Are you sure you want to delete the order for "${orderName}"?\n\nThis action cannot be undone.`
+        );
+
+        if (isConfirmed) {
+            setDeletingOrderId(orderId);
+            deleteOrderMutation.mutate(orderId);
+        }
+    };
+
+    const handleClearAllOrders = () => {
+        const isConfirmed = window.confirm(
+            `Are you sure you want to delete ALL ${orders.length} orders?\n\nThis action cannot be undone and will remove all current orders.`
+        );
+
+        if (isConfirmed) {
+            // Double confirmation for destructive action
+            const isDoubleConfirmed = window.confirm(
+                "⚠️ FINAL CONFIRMATION ⚠️\n\nThis will permanently delete ALL orders. Are you absolutely sure?"
+            );
+
+            if (isDoubleConfirmed) {
+                setClearingAllOrders(true);
+                clearAllOrdersMutation.mutate();
+            }
+        }
+    };
+
+
+    // TODO: mutation
+    const deleteOrderMutation = useMutation({
+        mutationFn: (orderId: string) => orderService.deleteOrder(orderId),
+        onError: (error, variables, context) => {
+            toast.error(error?.message || 'Failed to delete order');
+            setDeletingOrderId(null);
+        },
+        onSuccess: (data, variables, context) => {
+            queryClient.invalidateQueries({ queryKey: ['orders'] });
+            setDeletingOrderId(null);
+            toast.success("Order deleted successfully");
+        },
+    });
+
+    const clearAllOrdersMutation = useMutation({
+        mutationFn: () => orderService.clearAllOrders(),
+        onError: (error, variables, context) => {
+            toast.error(error?.message || 'Failed to clear all orders');
+            setClearingAllOrders(false);
+        },
+        onSuccess: (data, variables, context) => {
+            queryClient.invalidateQueries({ queryKey: ['orders'] });
+            setClearingAllOrders(false);
+            toast.success("All orders cleared successfully");
+        },
+    });
+
+
 
     // Use React Query's loading state instead of local state
     if (isLoading && sessionId) {
@@ -114,24 +191,44 @@ export default function HomePageContent() {
                                                     {order?.user?.name?.charAt(0) || "U"}
                                                 </span>
                                             </div>
-                                            <h3 className="font-semibold text-gray-900">{order?.user?.name || "Unknown User"}</h3>
+                                            <h3 className="font-semibold text-gray-900">{order?.userDisplay || "Unknown User"}</h3>
+                                            {isCurrentUserOrder(order) && (
+                                                <span className="px-2 py-1 text-xs bg-teal-100 text-teal-700 rounded-full">
+                                                    You
+                                                </span>
+                                            )}
                                         </div>
                                         <p className="text-teal-600 font-medium text-lg">{order?.menuItem?.name || "No item"}</p>
                                     </div>
 
                                     {/* Action Buttons */}
-                                    <div className="flex gap-1">
-                                        <button
-                                            className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-teal-100 hover:text-teal-600 transition-colors"
-                                        >
-                                            <Edit className="w-4 h-4"/>
-                                        </button>
-                                        <button
-                                            className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-red-100 hover:text-red-600 transition-colors"
-                                        >
-                                            <Trash2 className="w-4 h-4"/>
-                                        </button>
-                                    </div>
+                                    {isCurrentUserOrder(order) && (
+                                        <div className="flex gap-1">
+                                            <button
+                                                onClick={() => setEditingOrder(order)}
+                                                className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-teal-100 hover:text-teal-600 transition-colors"
+                                                title="Edit your order"
+                                            >
+                                                <Edit className="w-4 h-4"/>
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteOrder(order.id, order?.menuItem?.name || "Unknown Item")}
+                                                disabled={deletingOrderId === order.id}
+                                                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                                                    deletingOrderId === order.id
+                                                        ? 'bg-red-200 text-red-400 cursor-not-allowed'
+                                                        : 'bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600'
+                                                }`}
+                                                title="Delete your order"
+                                            >
+                                                {deletingOrderId === order.id ? (
+                                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-400"></div>
+                                                ) : (
+                                                    <Trash2 className="w-4 h-4"/>
+                                                )}
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Tags */}
@@ -174,9 +271,20 @@ export default function HomePageContent() {
                 {/* Clear All Button */}
                 {orders.length > 0 && (
                     <button
-                        className="w-12 h-12 bg-red-500 hover:bg-red-600 shadow-lg rounded-2xl flex items-center justify-center text-white hover:scale-105 transition-all duration-200"
+                        onClick={handleClearAllOrders}
+                        disabled={clearingAllOrders}
+                        className={`w-12 h-12 shadow-lg rounded-2xl flex items-center justify-center text-white hover:scale-105 transition-all duration-200 ${
+                            clearingAllOrders
+                                ? 'bg-red-400 cursor-not-allowed'
+                                : 'bg-red-500 hover:bg-red-600'
+                        }`}
+                        title={clearingAllOrders ? 'Clearing all orders...' : `Clear all ${orders.length} orders`}
                     >
-                        <Trash2 className="w-5 h-5" />
+                        {clearingAllOrders ? (
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        ) : (
+                            <Trash2 className="w-5 h-5"/>
+                        )}
                     </button>
                 )}
 
@@ -185,7 +293,7 @@ export default function HomePageContent() {
                     onClick={() => setIsOrderOpen(true)}
                     className="w-14 h-14 bg-gradient-to-br from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 shadow-lg rounded-2xl flex items-center justify-center text-white hover:scale-105 transition-all duration-200 shadow-teal-500/25"
                 >
-                    <Plus className="w-6 h-6" />
+                    <Plus className="w-6 h-6"/>
                 </button>
             </div>
 
@@ -193,7 +301,21 @@ export default function HomePageContent() {
             <div className="h-20"></div>
 
             {
-                isOrderOpen && <CreateOrder show={isOrderOpen} onClose={() => setIsOrderOpen(false)}/>
+                isOrderOpen &&
+                <CreateOrder sessionId={sessionId} show={isOrderOpen} onClose={() => setIsOrderOpen(false)}/>
+            }
+            {
+                (isOrderOpen) && (
+                    <CreateOrder
+                        sessionId={sessionId}
+                        show={isOrderOpen || !!editingOrder}
+                        onClose={() => {
+                            setIsOrderOpen(false);
+                            setEditingOrder(null);
+                        }}
+                        editOrder={editingOrder}
+                    />
+                )
             }
 
             {/* Profile Dialog */}

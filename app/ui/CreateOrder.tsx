@@ -1,21 +1,16 @@
 'use client';
 import {Save, Users, X} from 'lucide-react';
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@radix-ui/react-select";
-import {useState, useEffect} from "react";
-import {Spinner} from "react-bootstrap";
+import {useEffect, useState} from "react";
 import useProductMutation from "@/lib/hooks/use-product-mutation";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {productService} from "@/services/product.service";
 import toast from "react-hot-toast";
 import {Product, UpdateProduct} from "@/type/product";
+import {iceOptions, sugarLevels} from "@/type/suar-ice-preference";
+import {getIceText, getSugarText} from "@/utils/utils";
+import {orderService} from "@/services/order.service";
+import useUserMutation from "@/lib/hooks/use-user-mutation";
 
-const menuItems = [
-    "Americano", "Banana Milk", "Pocari Sweat", "Coca-cola", "Cafe Latte",
-    "Macha Latte", "Chocolate", "Bird Nest", "Potato Chips",
-];
-
-const sugarLevels = ["0%", "25%", "50%", "75%", "100%"];
-const iceOptions = ["Less Ice", "Normal Ice", "Hot", "No Ice"];
 
 interface OrderData {
     member: string;
@@ -25,10 +20,12 @@ interface OrderData {
     notes: string;
 }
 
-function CreateOrder({show, onClose, onSave}: {
+function CreateOrder({sessionId, show, onClose, onSave, editOrder}: {
+    sessionId: string | null;
     show: boolean;
     onClose?: () => void;
     onSave?: (orderData: OrderData) => void;
+    editOrder?: any;
 }) {
 
     const queryClient = useQueryClient();
@@ -52,20 +49,78 @@ function CreateOrder({show, onClose, onSave}: {
 
     if (!show) return null;
 
-    const {product_list, isLoading} = useProductMutation.useFetchProduct();
+    const { user, isLoading: isUserLoading } = useUserMutation.useFetchUserByUsername(sessionId);
+    const { product_list, isLoading: isFetchProductLoading } = useProductMutation.useFetchProduct();
 
 
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
 
+    // Team member input states
+    const [useCustomTeamName, setUseCustomTeamName] = useState(false);
+    const [teamMemberName, setTeamMemberName] = useState("");
 
-    //create product
+
+    //Create product data state
     const [addingProduct, setAddingProduct] = useState(false);
     const [newProduct, setNewProduct] = useState("");
     const [isProductLoading, setIsProductLoading] = useState(false);
     const [updateProductId, setUpdateProductId] = useState("");
     const [isUpdate, setIsUpdate] = useState(false);
 
+    // Sugar and Ice dropdown data state
+    const [sugarDropdownOpen, setSugarDropdownOpen] = useState(false);
+    const [iceDropdownOpen, setIceDropdownOpen] = useState(false);
+    const [selectedSugar, setSelectedSugar] = useState<string | null>(null);
+    const [selectedIce, setSelectedIce] = useState<string | null>(null);
+
+    const selectedProductCategory = selectedProduct
+        ? product_list?.find((p: any) => p.id === selectedProduct)?.category
+        : null;
+
+    // Reset sugar and ice when selecting a non-coffee product
+    useEffect(() => {
+        if (selectedProductCategory && selectedProductCategory !== 'COFFEE') {
+            setSelectedSugar(null);
+            setSelectedIce(null);
+        }
+    }, [selectedProductCategory]);
+
+    // Order data state
+    const [isCreateOrderLoading, setIsCreateOrderLoading] = useState(false);
+    const [specialNote, setSpecialNote] = useState("");
+
+
+    // Edit mode data state
+    const [isEditMode, setIsEditMode] = useState(false);
+    // Initialize form with edit data
+    useEffect(() => {
+        if (editOrder) {
+            setIsEditMode(true);
+            setSelectedProduct(editOrder.menuItemId || editOrder.menuItem?.id);
+            setSelectedSugar(editOrder.sugarLevel);
+            setSelectedIce(editOrder.iceLevel);
+            setSpecialNote(editOrder.specialNotes || '');
+
+            // Handle custom team name
+            if (editOrder.userDisplay && editOrder.userDisplay !== editOrder.user?.name) {
+                setUseCustomTeamName(true);
+                setTeamMemberName(editOrder.userDisplay);
+            } else {
+                setUseCustomTeamName(false);
+                setTeamMemberName('');
+            }
+        } else {
+            setIsEditMode(false);
+            // Reset form for new order
+            setSelectedProduct(null);
+            setSelectedSugar(null);
+            setSelectedIce(null);
+            setSpecialNote('');
+            setUseCustomTeamName(false);
+            setTeamMemberName('');
+        }
+    }, [editOrder]);
 
     // TODO: func
     const handleSelectProduct = (productId: string) => {
@@ -113,6 +168,61 @@ function CreateOrder({show, onClose, onSave}: {
         }
     };
 
+    const handleSelectSugar = (sugar: string) => {
+        setSelectedSugar(sugar);
+        setSugarDropdownOpen(false);
+    };
+
+    const handleSelectIce = (ice: string) => {
+        setSelectedIce(ice);
+        setIceDropdownOpen(false);
+    };
+
+
+    const handleSaveOrder = () => {
+
+        setIsCreateOrderLoading(true);
+
+        if (!selectedProduct) {
+            toast.error("Please select a product");
+            setIsCreateOrderLoading(false);
+            return;
+        }
+        // Only validate sugar and ice for coffee products
+        if (selectedProductCategory === 'COFFEE') {
+            if (!selectedSugar) {
+                toast.error("Please select sugar level");
+                setIsCreateOrderLoading(false);
+                return;
+            }
+            if (!selectedIce) {
+                toast.error("Please select ice preference");
+                setIsCreateOrderLoading(false);
+                return;
+            }
+        }
+
+        const order: any = {
+            userId: user?.id,
+            menuItemId: selectedProduct,
+            sugarLevel: selectedProductCategory === 'COFFEE' ? selectedSugar : null,
+            iceLevel: selectedProductCategory === 'COFFEE' ? selectedIce : null,
+            userDisplay: useCustomTeamName ? teamMemberName : user?.name,
+            specialNotes: specialNote
+        };
+        if (isEditMode && editOrder) {
+            // Update existing order
+            updateOrderMutation.mutate({
+                orderId: editOrder.id,
+                orderData: order
+            });
+        } else {
+            // Create new order
+            createOrderMutation.mutate(order);
+        }
+
+    }
+
 
     // TODO: mutation
     const createProductMutation = useMutation({
@@ -157,6 +267,73 @@ function CreateOrder({show, onClose, onSave}: {
         },
     })
 
+
+    const createOrderMutation = useMutation({
+        mutationFn: (req: any) => orderService.createOrder(req),
+        onError: (error, variables, context) => {
+            toast.error(error?.message)
+            setIsCreateOrderLoading(false);
+        },
+        onSuccess: (data, variables, context) => {
+            setAddingProduct(false);
+            setNewProduct("");
+            handleClose();
+            queryClient.invalidateQueries({ queryKey: ['orders'] })
+            setIsCreateOrderLoading(false);
+            toast.success("Create Order Successfully");
+        },
+    })
+
+    const updateOrderMutation = useMutation({
+        mutationFn: (req: { orderId: string; orderData: any }) =>
+            orderService.updateOrder(req.orderId, req.orderData),
+        onError: (error, variables, context) => {
+            toast.error(error?.message || 'Failed to update order');
+            setIsCreateOrderLoading(false);
+        },
+        onSuccess: (data, variables, context) => {
+            handleClose();
+            queryClient.invalidateQueries({ queryKey: ['orders'] });
+            setIsCreateOrderLoading(false);
+            toast.success("Order updated successfully");
+        },
+    });
+
+    //TODO: handle sessionId and loading state
+    const [error, setError] = useState<string | null>(null);
+    useEffect(() => {
+        if (!sessionId) {
+            setError('No session found. Please start from Telegram bot.');
+        } else {
+            setError(null);
+        }
+    }, [sessionId]);
+
+    if (isUserLoading || isFetchProductLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center max-w-md mx-auto p-6">
+                    <div className="text-red-500 text-6xl mb-4">⚠️</div>
+                    <h2 className="text-xl font-semibold mb-2">Session Error</h2>
+                    <p className="text-gray-600 mb-4">{error}</p>
+                    <p className="text-sm text-gray-500">
+                        Please go back to the Telegram bot and click the "កម្មង់ | Order" button again.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <>
             {/* Backdrop - Full screen */}
@@ -187,14 +364,33 @@ function CreateOrder({show, onClose, onSave}: {
                     <div className="flex-1 p-6 space-y-4 overflow-y-auto">
                         {/* Member Name */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Team Member
+                            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                                <input
+                                    type="checkbox"
+                                    checked={useCustomTeamName}
+                                    onChange={(e) => setUseCustomTeamName(e.target.checked)}
+                                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                                />
+                                Enter custom team member name
                             </label>
-                            <input
-                                type="text"
-                                placeholder="Enter team member name"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                            />
+
+                            {useCustomTeamName && (
+                                <input
+                                    type="text"
+                                    value={teamMemberName}
+                                    onChange={(e) => setTeamMemberName(e.target.value)}
+                                    placeholder="Enter team member name"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                                />
+                            )}
+
+                            {!useCustomTeamName && (
+                                <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md">
+                                    <span className="text-gray-600 font-mono text-sm tracking-wider">
+                                        ••••••••
+                                    </span>
+                                </div>
+                            )}
                         </div>
 
                         {/* Item Selection */}
@@ -203,12 +399,23 @@ function CreateOrder({show, onClose, onSave}: {
                             <div className="mb-4 relative">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Select Product</label>
                                 <div
-                                    className="w-full border border-gray-300 rounded-md px-3 py-2 cursor-pointer"
+                                    className="w-full border border-gray-300 rounded-md px-3 py-2 cursor-pointer flex justify-between items-center"
                                     onClick={() => setDropdownOpen(!dropdownOpen)}
                                 >
-                                    {selectedProduct
-                                        ? product_list.find((p: any) => p.id === selectedProduct)?.name
-                                        : "Select Product"}
+                                    <span className={selectedProduct ? "text-gray-900" : "text-gray-500"}>
+                                        {selectedProduct
+                                            ? product_list.find((p: any) => p.id === selectedProduct)?.name
+                                            : "Select Product"}
+                                    </span>
+                                    <svg
+                                        className={`w-4 h-4 text-gray-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                              d="M19 9l-7 7-7-7"/>
+                                    </svg>
                                 </div>
 
                                 {dropdownOpen && (
@@ -297,12 +504,8 @@ function CreateOrder({show, onClose, onSave}: {
                                                         <span className="text-white">
                                                             {
                                                                 isProductLoading ?
-                                                                    <Spinner animation="border" style={{
-                                                                        width: 18,
-                                                                        height: 18,
-                                                                        marginRight: 5
-                                                                    }} role="status">
-                                                                    </Spinner> : "✔️"
+                                                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-400"></div>
+                                                                    : "✔️"
                                                             }
                                                         </span>
                                                 </button>
@@ -326,52 +529,82 @@ function CreateOrder({show, onClose, onSave}: {
                             </div>
                         </div>
 
-                        {/* Sugar and Ice */}
-                        <div className="grid grid-cols-2 gap-3">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Sugar Level</label>
-                                <Select>
-                                    <SelectTrigger
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white">
-                                        <SelectValue placeholder="Sugar"/>
-                                    </SelectTrigger>
-                                    <SelectContent
-                                        className="bg-white border border-gray-300 rounded-md shadow-lg z-[60]">
-                                        {sugarLevels.map((level) => (
-                                            <SelectItem
-                                                key={level}
-                                                value={level}
-                                                className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                                            >
-                                                {level}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                        {/* Sugar and Ice - Conditionally Rendered */}
+                        {selectedProductCategory === 'COFFEE' && (
+                            <div className="grid grid-cols-2 gap-3">
+                                {/* Sugar Level Dropdown */}
+                                <div className="relative">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Sugar Level</label>
+                                    <div
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white cursor-pointer flex justify-between items-center"
+                                        onClick={() => setSugarDropdownOpen(!sugarDropdownOpen)}
+                                    >
+                                        <span className={selectedSugar ? "text-gray-900" : "text-gray-500"}>
+                                            {getSugarText(selectedSugar) || "Sugar"}
+                                        </span>
+                                        <svg
+                                            className={`w-4 h-4 text-gray-400 transition-transform ${sugarDropdownOpen ? 'rotate-180' : ''}`}
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                                  d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    </div>
+                                    {sugarDropdownOpen && (
+                                        <div
+                                            className="absolute w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-[60] max-h-60 overflow-y-auto">
+                                            {sugarLevels.map((level) => (
+                                                <div
+                                                    key={level}
+                                                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                                                    onClick={() => handleSelectSugar(level)}
+                                                >
+                                                    {getSugarText(level)}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Ice Preference</label>
-                                <Select>
-                                    <SelectTrigger
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white">
-                                        <SelectValue placeholder="Ice"/>
-                                    </SelectTrigger>
-                                    <SelectContent
-                                        className="bg-white border border-gray-300 rounded-md shadow-lg z-[60]">
-                                        {iceOptions.map((option) => (
-                                            <SelectItem
-                                                key={option}
-                                                value={option}
-                                                className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                                            >
-                                                {option}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                {/* Ice Preference Dropdown */}
+                                <div className="relative">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Ice Preference</label>
+                                    <div
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white cursor-pointer flex justify-between items-center"
+                                        onClick={() => setIceDropdownOpen(!iceDropdownOpen)}
+                                    >
+                                        <span className={selectedIce ? "text-gray-900" : "text-gray-500"}>
+                                            {getIceText(selectedIce) || "Ice"}
+                                        </span>
+                                        <svg
+                                            className={`w-4 h-4 text-gray-400 transition-transform ${iceDropdownOpen ? 'rotate-180' : ''}`}
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                                  d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    </div>
+                                    {iceDropdownOpen && (
+                                        <div
+                                            className="absolute w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-[60] max-h-60 overflow-y-auto">
+                                            {iceOptions.map((option) => (
+                                                <div
+                                                    key={option}
+                                                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                                                    onClick={() => handleSelectIce(option)}
+                                                >
+                                                    {getIceText(option)}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         {/* Notes */}
                         <div>
@@ -382,15 +615,26 @@ function CreateOrder({show, onClose, onSave}: {
                                 placeholder="Any special instructions..."
                                 rows={3}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none"
+                                onChange={(e) => setSpecialNote(e.target.value)}
                             />
                         </div>
 
                         {/* Save Button */}
                         <button
                             className="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 px-4 rounded-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            onClick={handleSaveOrder}
+                            disabled={isCreateOrderLoading}
                         >
-                            <Save className="w-4 h-4"/>
-                            Save Order
+                            {
+                                isCreateOrderLoading ?
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                    :
+                                    <>
+                                        <Save className="w-4 h-4"/>
+                                        Save Order
+                                    </>
+                            }
+
                         </button>
                     </div>
                 </div>
