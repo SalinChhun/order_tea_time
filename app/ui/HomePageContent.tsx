@@ -12,6 +12,7 @@ import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {orderService} from "@/services/order.service";
 import toast from "react-hot-toast";
 import useUserMutation from "@/lib/hooks/use-user-mutation";
+import Navbar from "@/app/components/Navbar";
 
 export default function HomePageContent() {
 
@@ -155,7 +156,7 @@ export default function HomePageContent() {
         <>
 
             {/* Modern Header with Glassmorphism */}
-
+            <Navbar user={user} orders={orders}/>
             {/* Orders List */}
             <div className="px-4 py-6 space-y-4 pb-32">
                 {orders.length === 0 ? (
@@ -185,12 +186,21 @@ export default function HomePageContent() {
                                 <div className="flex items-start justify-between mb-4">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <div
-                                                className="w-8 h-8 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center">
+                                            {order?.user?.image ? (
+                                                <img
+                                                    src={order.user.image}
+                                                    alt={order?.user?.name || "User"}
+                                                    className="w-8 h-8 rounded-lg object-cover"
+                                                />
+                                            ) : (
+                                                <div
+                                                    className="w-8 h-8 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center"
+                                                >
                                                 <span className="text-white text-sm font-bold">
-                                                    {order?.user?.name?.charAt(0) || "U"}
+                                                  {order?.user?.name?.charAt(0) || "U"}
                                                 </span>
-                                            </div>
+                                                </div>
+                                            )}
                                             <h3 className="font-semibold text-gray-900">{order?.userDisplay || "Unknown User"}</h3>
                                             {isCurrentUserOrder(order) && (
                                                 <span className="px-2 py-1 text-xs bg-teal-100 text-teal-700 rounded-full">

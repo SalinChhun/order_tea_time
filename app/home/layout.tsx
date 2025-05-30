@@ -37,7 +37,6 @@ export default function HomeLayout({children}: PropsWithChildren) {
                 }}/>
             <QueryClientProvider client={queryClient}>
                 <div className="home-container">
-                    <Navbar/>
                     {children}
                 </div>
             </QueryClientProvider>

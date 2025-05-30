@@ -11,25 +11,15 @@ import {getIceText, getSugarText} from "@/utils/utils";
 import {orderService} from "@/services/order.service";
 import useUserMutation from "@/lib/hooks/use-user-mutation";
 
-
-interface OrderData {
-    member: string;
-    item: string;
-    sugar: string;
-    ice: string;
-    notes: string;
-}
-
-function CreateOrder({sessionId, show, onClose, onSave, editOrder}: {
+function CreateOrder({sessionId, show, onClose, editOrder}: {
     sessionId: string | null;
     show: boolean;
     onClose?: () => void;
-    onSave?: (orderData: OrderData) => void;
     editOrder?: any;
 }) {
 
     const queryClient = useQueryClient();
-
+    const baseUrl = `${process.env.NEXT_PUBLIC_BASE_PATH}`;
     const handleClose = () => {
         if (onClose) onClose();
     };
@@ -207,7 +197,7 @@ function CreateOrder({sessionId, show, onClose, onSave, editOrder}: {
             menuItemId: selectedProduct,
             sugarLevel: selectedProductCategory === 'COFFEE' ? selectedSugar : null,
             iceLevel: selectedProductCategory === 'COFFEE' ? selectedIce : null,
-            userDisplay: useCustomTeamName ? teamMemberName : user?.name,
+            userDisplay: (useCustomTeamName && teamMemberName?.trim() !== '') ? teamMemberName : user?.name,
             specialNotes: specialNote
         };
         if (isEditMode && editOrder) {
@@ -425,13 +415,16 @@ function CreateOrder({sessionId, show, onClose, onSave, editOrder}: {
                                         {product_list?.map((product: any) => (
                                             <div
                                                 key={product.id}
-                                                className="flex justify-between items-center p-2 hover:bg-gray-100 cursor-pointer"
-                                                // onMouseEnter={() => setHoveredProduct(product.id)}
-                                                // onMouseLeave={() => setHoveredProduct(null)}
+                                                className="flex items-center gap-3 p-2 hover:bg-gray-100 cursor-pointer"
                                                 onClick={() => handleSelectProduct(product.id)}
                                             >
-                                                <span>{product.name}</span>
-
+                                                {/* Product Image */}
+                                                <img
+                                                    src={product.image || `${baseUrl}/icons/fast-food.svg`}
+                                                    alt={product.name}
+                                                    className="w-10 h-10 object-cover rounded-md"
+                                                />
+                                                <span className="flex-1">{product.name}</span>
                                                 <div className="flex items-center gap-2">
                                                     {/* Edit Button */}
                                                     <button
@@ -463,7 +456,6 @@ function CreateOrder({sessionId, show, onClose, onSave, editOrder}: {
                                                         className="text-red-500 hover:text-red-700"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            console.log('product ', product)
                                                             handleDeleteProduct(product?.id);
                                                         }}
                                                     >
