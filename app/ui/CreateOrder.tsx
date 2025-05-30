@@ -20,7 +20,6 @@ function CreateOrder({sessionId, show, onClose, editOrder}: {
 }) {
 
     const queryClient = useQueryClient();
-    const baseUrl = `${process.env.NEXT_PUBLIC_BASE_PATH}`;
     const handleClose = () => {
         if (onClose) onClose();
     };
@@ -421,7 +420,7 @@ function CreateOrder({sessionId, show, onClose, editOrder}: {
                                             >
                                                 {/* Product Image */}
                                                 <Image
-                                                    src={product.image || `${baseUrl}/icons/fast-food.svg`}
+                                                    src={product.image || `/icons/fast-food.svg`}
                                                     alt={product.name}
                                                     className="w-10 h-10 object-cover rounded-md"
                                                 />
