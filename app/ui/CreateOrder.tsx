@@ -10,6 +10,7 @@ import {iceOptions, sugarLevels} from "@/type/suar-ice-preference";
 import {getIceText, getSugarText} from "@/utils/utils";
 import {orderService} from "@/services/order.service";
 import useUserMutation from "@/lib/hooks/use-user-mutation";
+import Image from "next/image";
 
 function CreateOrder({sessionId, show, onClose, editOrder}: {
     sessionId: string | null;
@@ -419,7 +420,7 @@ function CreateOrder({sessionId, show, onClose, editOrder}: {
                                                 onClick={() => handleSelectProduct(product.id)}
                                             >
                                                 {/* Product Image */}
-                                                <img
+                                                <Image
                                                     src={product.image || `${baseUrl}/icons/fast-food.svg`}
                                                     alt={product.name}
                                                     className="w-10 h-10 object-cover rounded-md"
