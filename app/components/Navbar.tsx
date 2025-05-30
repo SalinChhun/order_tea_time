@@ -51,7 +51,8 @@ export default function Navbar({user, orders}: {
                         {/* Profile Button/Image with Dropdown */}
                         <div className="relative">
                             {user?.image ? (
-                                <button onClick={toggleProfileDropdown}>
+                                <button onClick={toggleProfileDropdown}
+                                        className="relative flex items-center justify-center">
                                     <img
                                         src={user.image}
                                         alt={user?.name || "User"}
@@ -64,7 +65,7 @@ export default function Navbar({user, orders}: {
                                     className="relative w-10 h-10 bg-teal-100 rounded-xl flex items-center justify-center hover:bg-teal-200 transition-colors"
                                     onClick={toggleProfileDropdown}
                                 >
-                                    <User className="w-5 h-5 text-teal-600" />
+                                    <User className="w-5 h-5 text-teal-600"/>
                                     <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
                                 </button>
                             )}
