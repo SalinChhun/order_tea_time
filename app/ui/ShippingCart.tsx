@@ -1,7 +1,8 @@
 import React from 'react';
 import { X, ShoppingCart, Package } from 'lucide-react';
 import useOrderMutation from "@/lib/hooks/use-order-mutation";
-import {getIceText, getSugarText} from "@/utils/utils";
+import { getIceText, getSugarText } from "@/utils/utils";
+import Image from "next/image";
 
 function ShippingCart({ show, onClose }: { show: boolean; onClose?: () => void }) {
     if (!show) return null;
@@ -27,7 +28,7 @@ function ShippingCart({ show, onClose }: { show: boolean; onClose?: () => void }
     const orderData = orders_count?.data || [];
 
     // Calculate total items
-    const totalItems = orderData.reduce((sum: any, item: any) => sum + item.total, 0);
+    const totalItems = orderData.reduce((sum: number, item: any) => sum + item.total, 0);
 
     // Categorize items based on ItemCategory enum
     const getBeverageItems = () => {
@@ -40,15 +41,18 @@ function ShippingCart({ show, onClose }: { show: boolean; onClose?: () => void }
         return orderData.filter((item: any) => !beverageCategories.includes(item.category));
     };
 
-    // Transform details to aggregate sugar and ice for display
+    // Transform details to create separate entries for each sugar/ice combination
     const transformOrderData = (items: typeof orderData) => {
-        return items.map((item: any) => ({
-            item: item.item,
-            category: item.category,
-            total: item.total,
-            sugar: item.details.find((detail: any) => detail.sugar)?.sugar || '',
-            ice: item.details.find((detail: any) => detail.ice)?.ice || '',
-        }));
+        return items.flatMap((item: any) =>
+            item.details.map((detail: any) => ({
+                item: item.item,
+                category: item.category,
+                image: item.image,
+                total: detail.count,
+                sugar: detail.sugar || '',
+                ice: detail.ice || '',
+            }))
+        );
     };
 
     const renderOrderItem = (item: any, index: any) => (
@@ -58,18 +62,30 @@ function ShippingCart({ show, onClose }: { show: boolean; onClose?: () => void }
         >
             <div className="flex-1">
                 <div className="flex items-center gap-3">
-                    <Package className="w-5 h-5 text-gray-600" />
+                    {
+                        item?.image ?
+                            <Image
+                                width={40}
+                                height={40}
+                                src={item?.image}
+                                alt={item?.item}
+                                className="w-10 h-10 object-cover rounded-md"
+                            />
+                            :
+                            <Package className="w-10 h-10 text-gray-600" />
+                    }
+
                     <div>
-                        <h3 className="font-medium text-gray-900">{item.item}</h3>
+                        <h3 className="font-medium text-gray-900">{item?.item}</h3>
                         <div className="flex gap-4 mt-1">
-                            {item.sugar && (
+                            {item?.sugar && (
                                 <span className="text-sm text-gray-600">
-                                    <span className="font-medium">Sugar:</span> {getSugarText(item.sugar)}
+                                    <span className="font-medium">Sugar:</span> {getSugarText(item?.sugar)}
                                 </span>
                             )}
-                            {item.ice && (
+                            {item?.ice && (
                                 <span className="text-sm text-gray-600">
-                                    <span className="font-medium">Ice:</span> {getIceText(item.ice)}
+                                    <span className="font-medium">Ice:</span> {getIceText(item?.ice)}
                                 </span>
                             )}
                         </div>
@@ -78,7 +94,7 @@ function ShippingCart({ show, onClose }: { show: boolean; onClose?: () => void }
             </div>
             <div className="flex items-center gap-3">
                 <div className="text-right">
-                    <div className="text-lg font-semibold text-gray-900">×{item.total}</div>
+                    <div className="text-lg font-semibold text-gray-900">×{item?.total}</div>
                     <div className="text-sm text-gray-500">items</div>
                 </div>
             </div>
@@ -128,7 +144,9 @@ function ShippingCart({ show, onClose }: { show: boolean; onClose?: () => void }
                                     <span className="text-sm text-gray-500">({beverageItems.length} types)</span>
                                 </div>
                                 <div className="space-y-3">
-                                    {beverageItems.map((item: any, index: any) => renderOrderItem(item, `beverage-${index}`))}
+                                    {beverageItems.map((item: any, index: any) =>
+                                        renderOrderItem(item, `beverage-${index}`)
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -142,7 +160,9 @@ function ShippingCart({ show, onClose }: { show: boolean; onClose?: () => void }
                                     <span className="text-sm text-gray-500">({nonBeverageItems.length} types)</span>
                                 </div>
                                 <div className="space-y-3">
-                                    {nonBeverageItems.map((item: any, index: any) => renderOrderItem(item, `food-${index}`))}
+                                    {nonBeverageItems.map((item: any, index: any) =>
+                                        renderOrderItem(item, `food-${index}`)
+                                    )}
                                 </div>
                             </div>
                         )}

@@ -7,6 +7,7 @@ export interface OrderCountDetail {
 export interface OrderCountByProduct {
     item: string;
     category: string;
+    image: string;
     total: number;
     details: OrderCountDetail[];
 }

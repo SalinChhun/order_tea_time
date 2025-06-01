@@ -1,6 +1,6 @@
 'use client';
-import {Save, Users, X} from 'lucide-react';
-import {useEffect, useState} from "react";
+import {Package, Save, Users, X} from 'lucide-react';
+import React, {useEffect, useState} from "react";
 import useProductMutation from "@/lib/hooks/use-product-mutation";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {productService} from "@/services/product.service";
@@ -86,6 +86,7 @@ function CreateOrder({sessionId, show, onClose, editOrder}: {
     // Initialize form with edit data
     useEffect(() => {
         if (editOrder) {
+            console.log('editOrder', editOrder);
             setIsEditMode(true);
             setSelectedProduct(editOrder.menuItemId || editOrder.menuItem?.id);
             setSelectedSugar(editOrder.sugarLevel);
@@ -394,7 +395,7 @@ function CreateOrder({sessionId, show, onClose, editOrder}: {
                                 >
                                     <span className={selectedProduct ? "text-gray-900" : "text-gray-500"}>
                                         {selectedProduct
-                                            ? product_list.find((p: any) => p.id === selectedProduct)?.name
+                                            ? product_list.find((p: any) => p?.id === selectedProduct)?.name
                                             : "Select Product"}
                                     </span>
                                     <svg
@@ -416,18 +417,24 @@ function CreateOrder({sessionId, show, onClose, editOrder}: {
                                             {product_list?.map((product: any) => {
                                                 return (
                                                     <div
-                                                        key={product.id}
+                                                        key={product?.id}
                                                         className="flex items-center gap-3 p-2 hover:bg-gray-100 cursor-pointer"
-                                                        onClick={() => handleSelectProduct(product.id)}
+                                                        onClick={() => handleSelectProduct(product?.id)}
                                                     >
-                                                        <Image
-                                                            width={40}
-                                                            height={40}
-                                                            src={product.image || `/icons/fast-food.svg`}
-                                                            alt={product.name}
-                                                            className="w-10 h-10 object-cover rounded-md"
-                                                        />
-                                                        <span className="flex-1">{product.name}</span>
+                                                        {
+                                                            product?.image ?
+                                                                <Image
+                                                                    width={40}
+                                                                    height={40}
+                                                                    src={product?.image}
+                                                                    alt={product?.name}
+                                                                    className="w-10 h-10 object-cover rounded-md"
+                                                                />
+                                                                :
+                                                                <Package className="w-10 h-10 text-gray-600" />
+                                                        }
+
+                                                        <span className="flex-1">{product?.name}</span>
                                                         <div className="flex items-center gap-2">
                                                             {/* Edit Button */}
                                                             <button
@@ -435,7 +442,7 @@ function CreateOrder({sessionId, show, onClose, editOrder}: {
                                                                 className="text-blue-500 hover:text-blue-700"
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    handleUpdateProduct(product.id, product.name);
+                                                                    handleUpdateProduct(product?.id, product?.name);
                                                                 }}
                                                             >
                                                                 <svg
@@ -613,6 +620,7 @@ function CreateOrder({sessionId, show, onClose, editOrder}: {
                                 Special Notes
                             </label>
                             <textarea
+                                value={specialNote}
                                 placeholder="Any special instructions..."
                                 rows={3}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none"

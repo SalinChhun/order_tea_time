@@ -41,6 +41,9 @@ export const getAllOrders = async () => {
             user: true,
             menuItem: true,
         },
+        orderBy: {
+            orderDate: 'desc',
+        },
     });
 };
 
@@ -63,17 +66,19 @@ export const getOrderCountsByProduct = async (): Promise<OrderCountSummary> => {
         select: {
             id: true,
             name: true,
-            category: true, // Include category
+            image: true,
+            category: true,
         }
     });
 
     // Create a map for quick lookup
-    const menuItemMap = new Map(menuItems.map(item => [item.id, { name: item.name, category: item.category }]));
+    const menuItemMap = new Map(menuItems.map(item => [item.id, { name: item.name, image: item.image, category: item.category }]));
 
     // Transform the data to match the required format
     const result = orderCounts.map(order => ({
         item: menuItemMap.get(order.menuItemId)?.name || 'Unknown Item',
         category: menuItemMap.get(order.menuItemId)?.category || 'Unknown Category', // Add category
+        image: menuItemMap.get(order.menuItemId)?.image || '',
         sugar: order.sugarLevel,
         ice: order.iceLevel,
         total: order._count.id,
@@ -96,7 +101,8 @@ export const getOrderCountsByProduct = async (): Promise<OrderCountSummary> => {
             acc.push({
                 item: curr.item,
                 total: curr.total,
-                category: curr.category, // Include category
+                category: curr.category,
+                image: curr.image,
                 details: [{
                     sugar: curr.sugar,
                     ice: curr.ice,
