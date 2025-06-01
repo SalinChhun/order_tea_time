@@ -15,8 +15,23 @@ const useFetchOrder = () =>{
     }
 }
 
+const useFetchOrderCount = () =>{
+
+    const {data,  isLoading, isError} = useQuery({
+        queryKey: ["orders-count"],
+        queryFn: () => orderService.getOrdersCount()
+    });
+
+    return {
+        isLoading,
+        isError,
+        orders_count: data,
+    }
+}
+
 export const useOrderMutation = {
     useFetchOrder,
+    useFetchOrderCount
 }
 
 export default useOrderMutation;

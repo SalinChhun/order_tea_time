@@ -1,6 +1,7 @@
 import {prisma} from "@/lib/prisma";
 import {$Enums, SugarLevel} from "@prisma/client";
 import IceLevel = $Enums.IceLevel;
+import {OrderCountByProduct, OrderCountSummary} from "@/type/order";
 
 
 export const createOrder = async ({
@@ -41,6 +42,78 @@ export const getAllOrders = async () => {
             menuItem: true,
         },
     });
+};
+
+export const getOrderCountsByProduct = async (): Promise<OrderCountSummary> => {
+    const orderCounts = await prisma.order.groupBy({
+        by: ['menuItemId', 'sugarLevel', 'iceLevel'],
+        _count: {
+            id: true,
+        },
+    });
+
+    // Fetch menu items with their categories
+    const menuItemIds = [...new Set(orderCounts.map(order => order.menuItemId))];
+    const menuItems = await prisma.menuItem.findMany({
+        where: {
+            id: {
+                in: menuItemIds
+            }
+        },
+        select: {
+            id: true,
+            name: true,
+            category: true, // Include category
+        }
+    });
+
+    // Create a map for quick lookup
+    const menuItemMap = new Map(menuItems.map(item => [item.id, { name: item.name, category: item.category }]));
+
+    // Transform the data to match the required format
+    const result = orderCounts.map(order => ({
+        item: menuItemMap.get(order.menuItemId)?.name || 'Unknown Item',
+        category: menuItemMap.get(order.menuItemId)?.category || 'Unknown Category', // Add category
+        sugar: order.sugarLevel,
+        ice: order.iceLevel,
+        total: order._count.id,
+    }));
+
+    // Group by item name and sum totals
+    const groupedResult = result.reduce((acc, curr) => {
+        const existingItem = acc.find(item => item.item === curr.item);
+        if (existingItem) {
+            existingItem.total += curr.total;
+            if (!existingItem.details) {
+                existingItem.details = [];
+            }
+            existingItem.details.push({
+                sugar: curr.sugar,
+                ice: curr.ice,
+                count: curr.total
+            });
+        } else {
+            acc.push({
+                item: curr.item,
+                total: curr.total,
+                category: curr.category, // Include category
+                details: [{
+                    sugar: curr.sugar,
+                    ice: curr.ice,
+                    count: curr.total
+                }]
+            });
+        }
+        return acc;
+    }, [] as OrderCountByProduct[]);
+
+    // Sort by total count descending
+    groupedResult.sort((a, b) => b.total - a.total);
+
+    return {
+        data: groupedResult,
+        totalOrders: result.reduce((sum, item) => sum + item.total, 0)
+    };
 };
 
 export const updateOrder = async (

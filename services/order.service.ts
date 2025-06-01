@@ -14,6 +14,11 @@ const getOrders = async (): Promise<any> => {
     return result.data
 }
 
+const getOrdersCount = async (): Promise<any> => {
+    const result = await http.get(`${ServiceId.ORDER}/count`);
+    return result.data
+}
+
 const updateOrder = (orderId: any, requestBody: any) => {
     return http.put(ServiceId.ORDER + `/${orderId}`, requestBody);
 }
@@ -29,6 +34,7 @@ const clearAllOrders = () => {
 export const orderService = {
     createOrder,
     getOrders,
+    getOrdersCount,
     updateOrder,
     deleteOrder,
     clearAllOrders

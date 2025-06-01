@@ -1,10 +1,7 @@
 'use client';
 import {useEffect, useState} from 'react';
 import {useSearchParams} from 'next/navigation';
-import {Coffee, Edit, Plus, Save, Trash2} from "lucide-react"
-import {Dialog, DialogContent, DialogTitle} from "@radix-ui/react-dialog";
-import {DialogHeader} from "next/dist/client/components/react-dev-overlay/internal/components/Dialog";
-import {Avatar, AvatarFallback, AvatarImage} from "@radix-ui/react-avatar";
+import {Coffee, Edit, Plus, Trash2} from "lucide-react"
 import CreateOrder from "@/app/ui/CreateOrder";
 import useOrderMutation from "@/lib/hooks/use-order-mutation";
 import {getIceText, getSugarText} from "@/utils/utils";
@@ -13,6 +10,8 @@ import {orderService} from "@/services/order.service";
 import toast from "react-hot-toast";
 import useUserMutation from "@/lib/hooks/use-user-mutation";
 import Navbar from "@/app/components/Navbar";
+import BottomNavigation from "@/app/components/BottomNavigation";
+import ShippingCart from "@/app/ui/ShippingCart";
 
 export default function HomePageContent() {
 
@@ -43,9 +42,8 @@ export default function HomePageContent() {
     // State to manage order state
     const [isOrderOpen, setIsOrderOpen] = useState(false)
     const [editingOrder, setEditingOrder] = useState<any>(null);
-
     const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
-    const [clearingAllOrders, setClearingAllOrders] = useState(false);
+    const [isOrderDetailOpen, setIsOrderDetailOpen] = useState(false);
 
 
     //TODO: Handle Func
@@ -57,24 +55,6 @@ export default function HomePageContent() {
         if (isConfirmed) {
             setDeletingOrderId(orderId);
             deleteOrderMutation.mutate(orderId);
-        }
-    };
-
-    const handleClearAllOrders = () => {
-        const isConfirmed = window.confirm(
-            `Are you sure you want to delete ALL ${orders.length} orders?\n\nThis action cannot be undone and will remove all current orders.`
-        );
-
-        if (isConfirmed) {
-            // Double confirmation for destructive action
-            const isDoubleConfirmed = window.confirm(
-                "⚠️ FINAL CONFIRMATION ⚠️\n\nThis will permanently delete ALL orders. Are you absolutely sure?"
-            );
-
-            if (isDoubleConfirmed) {
-                setClearingAllOrders(true);
-                clearAllOrdersMutation.mutate();
-            }
         }
     };
 
@@ -92,20 +72,6 @@ export default function HomePageContent() {
             toast.success("Order deleted successfully");
         },
     });
-
-    const clearAllOrdersMutation = useMutation({
-        mutationFn: () => orderService.clearAllOrders(),
-        onError: (error, variables, context) => {
-            toast.error(error?.message || 'Failed to clear all orders');
-            setClearingAllOrders(false);
-        },
-        onSuccess: (data, variables, context) => {
-            queryClient.invalidateQueries({ queryKey: ['orders'] });
-            setClearingAllOrders(false);
-            toast.success("All orders cleared successfully");
-        },
-    });
-
 
 
     // Use React Query's loading state instead of local state
@@ -281,39 +247,14 @@ export default function HomePageContent() {
                 )}
             </div>
 
-            {/* Floating Action Buttons */}
-            <div className="fixed bottom-6 right-4 flex flex-col gap-3 z-40">
-                {/* Clear All Button */}
-                {orders.length > 0 && (
-                    <button
-                        onClick={handleClearAllOrders}
-                        disabled={clearingAllOrders}
-                        className={`w-12 h-12 shadow-lg rounded-2xl flex items-center justify-center text-white hover:scale-105 transition-all duration-200 ${
-                            clearingAllOrders
-                                ? 'bg-red-400 cursor-not-allowed'
-                                : 'bg-red-500 hover:bg-red-600'
-                        }`}
-                        title={clearingAllOrders ? 'Clearing all orders...' : `Clear all ${orders.length} orders`}
-                    >
-                        {clearingAllOrders ? (
-                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                        ) : (
-                            <Trash2 className="w-5 h-5"/>
-                        )}
-                    </button>
-                )}
-
-                {/* Add Button */}
-                <button
-                    onClick={() => setIsOrderOpen(true)}
-                    className="w-14 h-14 bg-gradient-to-br from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 shadow-lg rounded-2xl flex items-center justify-center text-white hover:scale-105 transition-all duration-200 shadow-teal-500/25"
-                >
-                    <Plus className="w-6 h-6"/>
-                </button>
-            </div>
-
             {/* Bottom Safe Area */}
             <div className="h-20"></div>
+
+            <BottomNavigation
+                orders={orders}
+                onAddOrder={() => setIsOrderOpen(true)}
+                onOrderDetails={() => setIsOrderDetailOpen(true)}
+            />
 
             {
                 (isOrderOpen) && (
@@ -329,143 +270,14 @@ export default function HomePageContent() {
                 )
             }
 
-            {/* Profile Dialog */}
-            <Dialog>
-                <DialogContent className="sm:max-w-md mx-4">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <svg className="w-5 h-5" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                 xmlns="http://www.w3.org/2000/svg">
-                                <path
-                                    d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                />
-                                <path
-                                    d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                />
-                            </svg>
-                            Profile Settings
-                        </DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                        <div className="flex justify-center">
-                            <Avatar className="w-20 h-20">
-                                <AvatarImage/>
-                                <AvatarFallback className="bg-teal-500 text-white text-lg">
-                                </AvatarFallback>
-                            </Avatar>
-                        </div>
-
-                        <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                                Full Name
-                            </label>
-                            <input
-                                id="name"
-                                type="text"
-                                placeholder="Enter your full name"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                            />
-                        </div>
-
-                        <div>
-                            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-                                Username
-                            </label>
-                            <input
-                                id="username"
-                                type="text"
-                                placeholder="@username"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                            />
-                        </div>
-
-                        <div>
-                            <label htmlFor="avatar" className="block text-sm font-medium text-gray-700 mb-1">
-                                Avatar URL (optional)
-                            </label>
-                            <input
-                                id="avatar"
-                                type="url"
-                                placeholder="https://example.com/avatar.jpg"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                            />
-                        </div>
-
-                        <button
-                            className="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 px-4 rounded-md flex items-center justify-center"
-                        >
-                            <Save className="w-4 h-4 mr-2"/>
-                            Save Profile
-                        </button>
-                    </div>
-                </DialogContent>
-            </Dialog>
-
-            {/* Clear All Confirmation Dialog */}
-            <Dialog>
-                <DialogContent className="sm:max-w-md mx-4">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-red-600">
-                            <Trash2 className="w-5 h-5"/>
-                            Clear All Orders
-                        </DialogTitle>
-                    </DialogHeader>
-                    <div className="py-4">
-                        <p className="text-gray-600 mb-4">
-                            Are you sure you want to clear all orders? This action cannot be undone.
-                        </p>
-                        <div className="flex gap-3">
-                            <button
-                                className="flex-1 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 py-2 px-4 rounded-md"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md"
-                            >
-                                Clear All
-                            </button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
-
-            {/* Delete Order Confirmation Dialog */}
-            <Dialog>
-                <DialogContent className="sm:max-w-md mx-4">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-red-600">
-                            <Trash2 className="w-5 h-5"/>
-                            Delete Order
-                        </DialogTitle>
-                    </DialogHeader>
-                    <div className="py-4">
-                        <p className="text-gray-600 mb-4">
-                            Are you sure you want to delete this order? This action cannot be undone.
-                        </p>
-                        <div className="flex gap-3">
-                            <button
-                                className="flex-1 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 py-2 px-4 rounded-md"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md"
-                            >
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
+            {
+                isOrderDetailOpen && (
+                    <ShippingCart
+                        show={isOrderDetailOpen}
+                        onClose={() => setIsOrderDetailOpen(false)}
+                    />
+                )
+            }
         </>
     );
 }
