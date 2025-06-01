@@ -39,8 +39,8 @@ function CreateOrder({sessionId, show, onClose, editOrder}: {
 
     if (!show) return null;
 
-    const { user, isLoading: isUserLoading } = useUserMutation.useFetchUserByUsername(sessionId);
-    const { product_list, isLoading: isFetchProductLoading } = useProductMutation.useFetchProduct();
+    const {user, isLoading: isUserLoading} = useUserMutation.useFetchUserByUsername(sessionId);
+    const {product_list, isLoading: isFetchProductLoading} = useProductMutation.useFetchProduct();
     console.log('product_list', product_list);
 
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -122,7 +122,7 @@ function CreateOrder({sessionId, show, onClose, editOrder}: {
         e.preventDefault();
         e.stopPropagation();
 
-        const product:Product = {
+        const product: Product = {
             name: newProduct,
             description: '',
             image: '',
@@ -224,7 +224,7 @@ function CreateOrder({sessionId, show, onClose, editOrder}: {
         onSuccess: (data, variables, context) => {
             setAddingProduct(false);
             setNewProduct("");
-            queryClient.invalidateQueries({ queryKey: ['products'] })
+            queryClient.invalidateQueries({queryKey: ['products']})
             setIsProductLoading(false);
             toast.success("Create Product Successfully");
         },
@@ -239,7 +239,7 @@ function CreateOrder({sessionId, show, onClose, editOrder}: {
         onSuccess: (data, variables, context) => {
             setAddingProduct(false);
             setNewProduct("");
-            queryClient.invalidateQueries({ queryKey: ['products'] })
+            queryClient.invalidateQueries({queryKey: ['products']})
             setIsProductLoading(false);
             toast.success("Update Product Successfully");
         },
@@ -252,7 +252,7 @@ function CreateOrder({sessionId, show, onClose, editOrder}: {
             setIsProductLoading(false);
         },
         onSuccess: (data, variables, context) => {
-            queryClient.invalidateQueries({ queryKey: ['products'] })
+            queryClient.invalidateQueries({queryKey: ['products']})
             toast.success("Delete Product Successfully");
         },
     })
@@ -268,7 +268,7 @@ function CreateOrder({sessionId, show, onClose, editOrder}: {
             setAddingProduct(false);
             setNewProduct("");
             handleClose();
-            queryClient.invalidateQueries({ queryKey: ['orders'] })
+            queryClient.invalidateQueries({queryKey: ['orders']})
             setIsCreateOrderLoading(false);
             toast.success("Create Order Successfully");
         },
@@ -283,7 +283,7 @@ function CreateOrder({sessionId, show, onClose, editOrder}: {
         },
         onSuccess: (data, variables, context) => {
             handleClose();
-            queryClient.invalidateQueries({ queryKey: ['orders'] });
+            queryClient.invalidateQueries({queryKey: ['orders']});
             setIsCreateOrderLoading(false);
             toast.success("Order updated successfully");
         },
@@ -410,116 +410,120 @@ function CreateOrder({sessionId, show, onClose, editOrder}: {
 
                                 {dropdownOpen && (
                                     <div
-                                        className="absolute w-full mt-1 bg-white border border-gray-300 rounded-md shadow-md z-10 max-h-60 overflow-y-auto"
+                                        className="absolute w-full mt-1 bg-white border border-gray-300 rounded-md shadow-md z-10 max-h-65 overflow-y-auto"
                                     >
-                                        {product_list?.map((product: any) => {
-                                            return (
-                                                <div
-                                                    key={product.id}
-                                                    className="flex items-center gap-3 p-2 hover:bg-gray-100 cursor-pointer"
-                                                    onClick={() => handleSelectProduct(product.id)}
-                                                >
-                                                    <Image
-                                                        width={40}
-                                                        height={40}
-                                                        src={product.image || `/icons/fast-food.svg`}
-                                                        alt={product.name}
-                                                        className="w-10 h-10 object-cover rounded-md"
-                                                    />
-                                                    <span className="flex-1">{product.name}</span>
-                                                    <div className="flex items-center gap-2">
-                                                        {/* Edit Button */}
-                                                        <button
-                                                            type="button"
-                                                            className="text-blue-500 hover:text-blue-700"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleUpdateProduct(product.id, product.name);
-                                                            }}
-                                                        >
-                                                            <svg
-                                                                xmlns="http://www.w3.org/2000/svg"
-                                                                className="h-4 w-4 text-blue-600"
-                                                                fill="none"
-                                                                viewBox="0 0 24 24"
-                                                                stroke="currentColor"
+                                        <div className="overflow-y-auto flex-1 max-h-48">
+                                            {product_list?.map((product: any) => {
+                                                return (
+                                                    <div
+                                                        key={product.id}
+                                                        className="flex items-center gap-3 p-2 hover:bg-gray-100 cursor-pointer"
+                                                        onClick={() => handleSelectProduct(product.id)}
+                                                    >
+                                                        <Image
+                                                            width={40}
+                                                            height={40}
+                                                            src={product.image || `/icons/fast-food.svg`}
+                                                            alt={product.name}
+                                                            className="w-10 h-10 object-cover rounded-md"
+                                                        />
+                                                        <span className="flex-1">{product.name}</span>
+                                                        <div className="flex items-center gap-2">
+                                                            {/* Edit Button */}
+                                                            <button
+                                                                type="button"
+                                                                className="text-blue-500 hover:text-blue-700"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleUpdateProduct(product.id, product.name);
+                                                                }}
                                                             >
-                                                                <path
-                                                                    strokeLinecap="round"
-                                                                    strokeLinejoin="round"
-                                                                    strokeWidth={2}
-                                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                                                />
-                                                            </svg>
-                                                        </button>
-                                                        {/* Delete Button */}
-                                                        <button
-                                                            type="button"
-                                                            className="text-red-500 hover:text-red-700"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleDeleteProduct(product?.id);
-                                                            }}
-                                                        >
-                                                            <svg
-                                                                xmlns="http://www.w3.org/2000/svg"
-                                                                className="h-4 w-4 text-red-600"
-                                                                fill="none"
-                                                                viewBox="0 0 24 24"
-                                                                stroke="currentColor"
+                                                                <svg
+                                                                    xmlns="http://www.w3.org/2000/svg"
+                                                                    className="h-4 w-4 text-blue-600"
+                                                                    fill="none"
+                                                                    viewBox="0 0 24 24"
+                                                                    stroke="currentColor"
+                                                                >
+                                                                    <path
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                        strokeWidth={2}
+                                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                                                    />
+                                                                </svg>
+                                                            </button>
+                                                            {/* Delete Button */}
+                                                            <button
+                                                                type="button"
+                                                                className="text-red-500 hover:text-red-700"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleDeleteProduct(product?.id);
+                                                                }}
                                                             >
-                                                                <path
-                                                                    strokeLinecap="round"
-                                                                    strokeLinejoin="round"
-                                                                    strokeWidth={2}
-                                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                                                />
-                                                            </svg>
-                                                        </button>
+                                                                <svg
+                                                                    xmlns="http://www.w3.org/2000/svg"
+                                                                    className="h-4 w-4 text-red-600"
+                                                                    fill="none"
+                                                                    viewBox="0 0 24 24"
+                                                                    stroke="currentColor"
+                                                                >
+                                                                    <path
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                        strokeWidth={2}
+                                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                                                    />
+                                                                </svg>
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            )
-                                        })}
+                                                )
+                                            })}
+                                        </div>
                                         {/* Add New Product Input */}
-                                        {addingProduct ? (
-                                            <div className="flex items-center gap-2 p-2 border-t">
-                                                <input
-                                                    type="text"
-                                                    value={newProduct}
-                                                    onChange={(e) => setNewProduct(e.target.value)}
-                                                    placeholder="Enter new product"
-                                                    className="w-full border px-2 py-1 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                                />
+                                        <div className="bg-white rounded-b-md">
+                                            {addingProduct ? (
+                                                <div className="flex items-center gap-2 p-2">
+                                                    <input
+                                                        type="text"
+                                                        value={newProduct}
+                                                        onChange={(e) => setNewProduct(e.target.value)}
+                                                        placeholder="Enter new product"
+                                                        className="w-full border px-2 py-1 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        className="bg-[#121b40] hover:bg-[#283C8CFF] rounded-md p-[7px] ks-txt-white"
+                                                        disabled={isProductLoading}
+                                                        onClick={handleAddNewProduct}
+                                                    >
+                                                            <span className="text-white">
+                                                                {
+                                                                    isProductLoading ?
+                                                                        <div
+                                                                            className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-400"></div>
+                                                                        : "✔️"
+                                                                }
+                                                            </span>
+                                                    </button>
+                                                    <button
+                                                        className="bg-[#501414FF] hover:text-green-700 rounded-md p-[7px]"
+                                                        onClick={() => setAddingProduct(false)}
+                                                    >
+                                                        <span className="text-red-900">❌</span>
+                                                    </button>
+                                                </div>
+                                            ) : (
                                                 <button
-                                                    type="button"
-                                                    className="bg-[#121b40] hover:bg-[#283C8CFF] rounded-md p-[7px] ks-txt-white"
-                                                    disabled={isProductLoading}
-                                                    onClick={handleAddNewProduct}
+                                                    onClick={() => setAddingProduct(true)}
+                                                    className="w-full text-left px-3 py-4 text-blue-600 hover:bg-gray-100"
                                                 >
-                                                        <span className="text-white">
-                                                            {
-                                                                isProductLoading ?
-                                                                    <div
-                                                                        className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-400"></div>
-                                                                    : "✔️"
-                                                            }
-                                                        </span>
+                                                    + Add New
                                                 </button>
-                                                <button
-                                                    className="bg-[#501414FF] hover:text-green-700 rounded-md p-[7px]"
-                                                    onClick={() => setAddingProduct(false)}
-                                                >
-                                                    <span className="text-red-900">❌</span>
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <button
-                                                onClick={() => setAddingProduct(true)}
-                                                className="w-full text-left px-3 py-2 text-blue-600 hover:bg-gray-100"
-                                            >
-                                                + Add New
-                                            </button>
-                                        )}
+                                            )}
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -566,7 +570,8 @@ function CreateOrder({sessionId, show, onClose, editOrder}: {
 
                                 {/* Ice Preference Dropdown */}
                                 <div className="relative">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Ice Preference</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Ice
+                                        Preference</label>
                                     <div
                                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white cursor-pointer flex justify-between items-center"
                                         onClick={() => setIceDropdownOpen(!iceDropdownOpen)}
