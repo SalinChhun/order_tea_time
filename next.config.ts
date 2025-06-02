@@ -9,14 +9,11 @@ const nextConfig: NextConfig = {
         ignoreDuringBuilds: true,
     },
     images: {
-        domains: ['firebasestorage.googleapis.com'],
-        // Or use the newer remotePatterns (Next.js 12.3+)
         remotePatterns: [
             {
-                protocol: 'https',
-                hostname: 'firebasestorage.googleapis.com',
-                port: '',
-                pathname: '/v0/b/**',
+                protocol: "https",
+                hostname: "ik.imagekit.io",
+                port: "",
             },
         ],
     },
